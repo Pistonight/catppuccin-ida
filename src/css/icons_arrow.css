@@ -58,16 +58,40 @@ QHeaderView::down-arrow
     width: 8px;
 }
 
-QSpinBox::up-arrow,
-QDoubleSpinBox::up-arrow
+/* Spin boxes. (Qt does not apply `:off` at the minimum / maximum, so only a
+ * disabled spin box gets the dimmed arrows.) */
+QAbstractSpinBox::up-arrow
 {
     image: url("$RELPATH/icons/arrow-up.svg");
+    width: 8px;
+    height: 8px;
 }
 
-QSpinBox::down-arrow,
-QDoubleSpinBox::down-arrow
+QAbstractSpinBox::down-arrow
 {
     image: url("$RELPATH/icons/arrow-down.svg");
+    width: 8px;
+    height: 8px;
+}
+
+QAbstractSpinBox::up-arrow:hover
+{
+    image: url("$RELPATH/icons/arrow-up-hover.svg");
+}
+
+QAbstractSpinBox::down-arrow:hover
+{
+    image: url("$RELPATH/icons/arrow-down-hover.svg");
+}
+
+QAbstractSpinBox::up-arrow:disabled
+{
+    image: url("$RELPATH/icons/arrow-up-disabled.svg");
+}
+
+QAbstractSpinBox::down-arrow:disabled
+{
+    image: url("$RELPATH/icons/arrow-down-disabled.svg");
 }
 
 QComboBox::down-arrow:disabled

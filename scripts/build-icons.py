@@ -9,14 +9,21 @@ Colours come from the config file (common.paths.CONFIG_FILE).
 - Arrows: arrow-{up,down,left,right}[-<state>].svg for every state in
   roles.arrows (`normal` has no suffix), used by src/css/icons_arrow.css
   and the plugin's nav band buttons.
+- Check box / radio marks: checkbox-checked, checkbox-indeterminate and
+  radio-checked.svg, coloured by roles.indicators, used by
+  src/css/icons_indicator.css.
 - IDA's toolbar/menu icons: menu/<Name>.svg for every icon in the icon config
   (common.paths.ICON_CONFIG_FILE); build-css points IDA at them. Each is a
   codicon in a colour, optionally with a modifier badge
   (src/icons/modifier-<name>.svg) layered on its bottom-right corner, with the
   codicon cut away around the badge. .cache/ida_codicon.html shows them all.
+- Swapped icons: swapped/<resource path>.svg for the icon config's `swapped`
+  section, icons IDA loads straight from its resources (e.g. Local Types
+  rows); the plugin swaps them at runtime.
 """
 
 import os
+import re
 import shutil
 
 import yaml
@@ -30,6 +37,10 @@ from common.render import write_page
 
 ICONS_DIR = os.path.join(DIST_THEME, "icons")
 MENU_DIR = os.path.join(ICONS_DIR, "menu")
+# Icons the plugin swaps at runtime, at icons/swapped/<resource path>.svg
+SWAPPED_DIR = os.path.join(ICONS_DIR, "swapped")
+SWAPPED_SECTION = "swapped"
+SWAPPED_KEY_RE = re.compile(r"[\w-]+(/[\w-]+)*")
 MODIFIERS_DIR = os.path.join(SRC, "icons")
 PREVIEW = os.path.join(CACHE, "ida_codicon.html")
 
@@ -43,6 +54,19 @@ ARROWS = {
 ARROW_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10">'
              '<polygon points="%s" fill="%s"/></svg>\n')
 ARROW_NORMAL_STATE = "normal"
+
+# Check box / radio button marks, drawn into the 12px indicators: file name ->
+# (role in roles.indicators, shape). Strokes are thicker than codicons' so
+# they stay legible that small.
+INDICATORS = {
+    "checkbox-checked": ("check", '<path d="M3.5 8.5L6.5 11.5L12.5 4.5" fill="none" stroke="%s" '
+                                  'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'),
+    "checkbox-indeterminate": ("check", '<path d="M4 8H12" fill="none" stroke="%s" '
+                                        'stroke-width="2.2" stroke-linecap="round"/>'),
+    "radio-checked": ("radio", '<circle cx="8" cy="8" r="3.5" fill="%s"/>'),
+}
+INDICATOR_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">'
+                 '%s</svg>\n')
 
 ICON_SVG = ('<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">'
             '%s</svg>\n')
@@ -92,10 +116,57 @@ def build_arrow_icons(icon_roles):
     print("built %d arrow icons (%s) in %s" % (written, ", ".join(states), rel(ICONS_DIR)))
 
 
+def build_indicator_icons(icon_roles):
+    os.makedirs(ICONS_DIR, exist_ok=True)
+    for name, (role, shape) in INDICATORS.items():
+        key = "indicators--" + role
+        if key not in icon_roles:
+            raise ScriptError("%s: missing roles.indicators.%s" % (rel(CONFIG_FILE), role))
+        with open(os.path.join(ICONS_DIR, name + ".svg"), "w", encoding="utf-8", newline="\n") as f:
+            f.write(INDICATOR_SVG % (shape % icon_roles[key]))
+    print("built %d indicator icons in %s" % (len(INDICATORS), rel(ICONS_DIR)))
+
+
 def _colored(body, color):
     """An icon's markup in one colour. Icons fill with currentColor, set on
     their (dropped) <svg> element and sometimes on the shapes themselves."""
     return '<g fill="%s">%s</g>' % (color, body.replace("currentColor", color))
+
+
+def _compose(name, entry, modifiers, color_values, definition_values):
+    """An icon config entry as SVG markup, and a label for the preview."""
+    where = "%s: %s" % (rel(ICON_CONFIG_FILE), name)
+    base = entry.get("base") if isinstance(entry, dict) else None
+    if not (isinstance(base, list) and len(base) == 2):
+        raise ScriptError("%s: expected `base: [<codicon>, <colour>]`" % where)
+    codicon, ref = base
+    color = _resolved(ref, color_values, definition_values, name + ".base", ICON_CONFIG_FILE)
+    body = _colored(icon_body(codicon_path(codicon)), color)
+    modifier = entry.get("modifier")
+    if modifier is None:
+        layers = body
+    elif modifier in modifiers:
+        layers = '%s<g mask="url(#badge-gap)">%s</g>%s' % (BADGE_GAP_MASK, body, modifiers[modifier])
+    else:
+        raise ScriptError("%s: unknown modifier %r (defined: %s)"
+                          % (where, modifier, ", ".join(modifiers)))
+    label = "%s (%s%s)" % (name, codicon, " + " + modifier if modifier else "")
+    return ICON_SVG % layers, label
+
+
+def _write_icons(entries, out_dir, modifiers, color_values, definition_values):
+    """Build {relative name: entry} into out_dir/<name>.svg; returns preview items."""
+    if os.path.isdir(out_dir):
+        shutil.rmtree(out_dir)
+    preview = []
+    for name, entry in entries.items():
+        svg, label = _compose(name, entry, modifiers, color_values, definition_values)
+        path = os.path.join(out_dir, *name.split("/")) + ".svg"
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8", newline="\n") as f:
+            f.write(svg)
+        preview.append((label, path))
+    return preview
 
 
 def build_ida_icons(color_values, definition_values):
@@ -114,42 +185,31 @@ def build_ida_icons(color_values, definition_values):
         color = _resolved(ref, color_values, definition_values, "modifiers." + name, ICON_CONFIG_FILE)
         modifiers[name] = _colored(svg_body(path), color)
 
+    swapped = icon_config.pop(SWAPPED_SECTION, None) or {}
+    if not isinstance(swapped, dict):
+        raise ScriptError("%s: `%s` must map resource paths to icons" % (rel(ICON_CONFIG_FILE), SWAPPED_SECTION))
+    bad = [k for k in swapped if not SWAPPED_KEY_RE.fullmatch(str(k))]
+    if bad:
+        raise ScriptError("%s: %s keys must be resource paths under :/ without .svg, e.g. "
+                          "IDAG/resources/widgets/struct: %s"
+                          % (rel(ICON_CONFIG_FILE), SWAPPED_SECTION, ", ".join(map(str, bad))))
+
     themable = ida_icon_names()
     unknown = sorted(set(icon_config) - set(themable))
     if unknown:
         raise ScriptError("%s: not in %s: %s"
                           % (rel(ICON_CONFIG_FILE), rel(ICON_LIST), ", ".join(unknown)))
 
-    if os.path.isdir(MENU_DIR):
-        shutil.rmtree(MENU_DIR)
-    os.makedirs(MENU_DIR)
-    preview = []
-    for name, entry in icon_config.items():
-        where = "%s: %s" % (rel(ICON_CONFIG_FILE), name)
-        base = entry.get("base") if isinstance(entry, dict) else None
-        if not (isinstance(base, list) and len(base) == 2):
-            raise ScriptError("%s: expected `base: [<codicon>, <colour>]`" % where)
-        codicon, ref = base
-        color = _resolved(ref, color_values, definition_values, name + ".base", ICON_CONFIG_FILE)
-        body = _colored(icon_body(codicon_path(codicon)), color)
-        modifier = entry.get("modifier")
-        if modifier is None:
-            layers = body
-        elif modifier in modifiers:
-            layers = '%s<g mask="url(#badge-gap)">%s</g>%s' % (BADGE_GAP_MASK, body, modifiers[modifier])
-        else:
-            raise ScriptError("%s: unknown modifier %r (defined: %s)"
-                              % (where, modifier, ", ".join(modifiers)))
-        path = os.path.join(MENU_DIR, name + ".svg")
-        with open(path, "w", encoding="utf-8", newline="\n") as f:
-            f.write(ICON_SVG % layers)
-        preview.append(("%s (%s%s)" % (name, codicon, " + " + modifier if modifier else ""), path))
-
+    preview = _write_icons(icon_config, MENU_DIR, modifiers, color_values, definition_values)
     missing = [n for n in themable if n not in icon_config]
     print("built %d IDA icons in %s" % (len(preview), rel(MENU_DIR)))
     if missing:
         print("warning: no icon configured for %d: %s" % (len(missing), ", ".join(missing)))
-    write_page(preview, "IDA icons from codicons", PREVIEW)
+
+    swapped_preview = _write_icons(swapped, SWAPPED_DIR, modifiers, color_values, definition_values)
+    print("built %d swapped icons in %s" % (len(swapped_preview), rel(SWAPPED_DIR)))
+
+    write_page(preview + swapped_preview, "IDA icons from codicons", PREVIEW)
     print("rendered them to %s" % file_url(PREVIEW))
 
 
@@ -157,7 +217,9 @@ def main():
     config = load_config()
     color_values = colors(config)
     definition_values = definitions(config, color_values)
-    build_arrow_icons(icon_colors(config, color_values, definition_values))
+    icon_roles = icon_colors(config, color_values, definition_values)
+    build_arrow_icons(icon_roles)
+    build_indicator_icons(icon_roles)
     build_ida_icons(color_values, definition_values)
 
 

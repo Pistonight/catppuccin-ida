@@ -109,7 +109,7 @@ definitions:
   fg: c-text
   fg-dim: c-subtext0
   fg-disabled: c-overlay0
-  accent: c-mauve  # hover / focus borders
+  accent: c-blue  # hover / focus borders
   selection: c-surface1
   highlight: c-yellow-a25  # search, same-name highlight
 
@@ -153,6 +153,11 @@ roles:
     normal: c-subtext0
     hover: c-text
     disabled: c-surface2
+
+  # Check box / radio button marks (generated icons)
+  indicators:
+    check: d-view    # check mark / dash, drawn on the checked fill
+    radio: d-accent  # dot of a selected radio button
 
   widget:
     # Base widget colours and validation hints
@@ -221,6 +226,16 @@ roles:
       border: d-border-strong
       hover-border: d-accent
       disabled-fg: d-fg-disabled
+    # Number inputs with up/down buttons
+    spinbox:
+      bg: d-view
+      border: d-border-strong
+      hover-border: d-accent
+      disabled-fg: d-fg-disabled
+      button-bg: d-surface
+      button-border: d-border-strong
+      button-hover-bg: d-surface-hi
+      button-pressed-bg: d-handle
 
     # Push buttons, tool buttons, toolbars
     button:
@@ -253,6 +268,7 @@ roles:
       indicator-border: d-border-strong
       indicator-hover-border: d-accent
       indicator-checked-bg: d-accent
+      radio-checked-border: d-accent
 
     # Tab bars and tab panes
     tab:

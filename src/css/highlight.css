@@ -4,11 +4,13 @@
  * Output window and script text areas
  * ------------------------------------------------------------------ */
 
+/* Without a border rule, Qt draws the native (light) frame around it */
 log_widget_t,
 log_widget_t[os-dark-theme="true"]
 {
     color: ${ctp-r-highlight--output--fg};
     background-color: ${ctp-r-highlight--output--bg};
+    border: none;
 }
 
 /* Output window / script text areas */

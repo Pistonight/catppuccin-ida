@@ -549,3 +549,46 @@ DiffToggleBasePanel:
 DiffToggleDetails:
   base: [info, c-mauve]
   modifier: check
+
+# Icons IDA loads straight from its resources instead of through the theme's
+# themeicon properties. The plugin recognises them by their pixels and swaps
+# them at runtime. Keyed by resource path under ":/", without ".svg".
+swapped:
+  # Local Types rows
+  IDAG/resources/widgets/struct:
+    base: [symbol-structure, c-blue]
+  IDAG/resources/widgets/union:
+    base: [symbol-structure, c-sapphire]
+  IDAG/resources/widgets/enum:
+    base: [symbol-enum, c-blue]
+  IDAG/resources/widgets/typedef:
+    base: [symbol-class, c-blue]
+  # Forward declarations: same shapes, dimmed
+  IDAG/resources/widgets/fwdstruct:
+    base: [symbol-structure, c-overlay2]
+  IDAG/resources/widgets/fwdunion:
+    base: [symbol-structure, c-overlay2]
+  IDAG/resources/widgets/fwdenum:
+    base: [symbol-enum, c-overlay2]
+  # String types (Strings window); not yet compared with the originals
+  IDAG/resources/widgets/strchoose_0:
+    base: [symbol-string, c-green]
+  IDAG/resources/widgets/strchoose_1:
+    base: [symbol-string, c-green]
+  IDAG/resources/widgets/strchoose_2:
+    base: [symbol-string, c-green]
+  IDAG/resources/widgets/strchoose_3:
+    base: [symbol-string, c-green]
+  IDAG/resources/widgets/strchoose_4:
+    base: [symbol-string, c-green]
+  IDAG/resources/widgets/strchoose_5:
+    base: [symbol-string, c-green]
+  IDAG/resources/widgets/strchoose_6:
+    base: [symbol-string, c-green]
+  IDAG/resources/widgets/strchoose_7:
+    base: [symbol-string, c-green]
+  # List filter bar buttons
+  libui/resources/chooser_widget/close_quick_filter:
+    base: [close, c-overlay2]
+  libui/resources/chooser_widget/refresh:
+    base: [refresh, c-text]

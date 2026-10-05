@@ -1,0 +1,16 @@
+/* Check box and radio button marks: once the indicators are styled, Qt no longer draws the check mark or dot, so they are images from icons/ */
+
+QCheckBox::indicator:checked
+{
+    image: url("$RELPATH/icons/checkbox-checked.svg");
+}
+
+QCheckBox::indicator:indeterminate
+{
+    image: url("$RELPATH/icons/checkbox-indeterminate.svg");
+}
+
+QRadioButton::indicator:checked
+{
+    image: url("$RELPATH/icons/radio-checked.svg");
+}

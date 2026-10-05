@@ -268,6 +268,66 @@ QLineEdit:disabled
 }
 
 /* ------------------------------------------------------------------ *
+ * Spin boxes (number inputs with up/down buttons)
+ * ------------------------------------------------------------------ */
+
+/* Styled like QLineEdit; the buttons sit inside the frame on the right
+ * (arrow images are in icons_arrow.css). */
+QAbstractSpinBox
+{
+    background-color: ${ctp-r-widget--spinbox--bg};
+    border: 1px solid ${ctp-r-widget--spinbox--border};
+    border-radius: 2px;
+    min-height: 20px;
+    padding-right: 16px;
+}
+
+QAbstractSpinBox:hover,
+QAbstractSpinBox:focus
+{
+    border: 1px solid ${ctp-r-widget--spinbox--hover-border};
+}
+
+QAbstractSpinBox:disabled
+{
+    color: ${ctp-r-widget--spinbox--disabled-fg};
+}
+
+QAbstractSpinBox::up-button,
+QAbstractSpinBox::down-button
+{
+    subcontrol-origin: border;
+    width: 16px;
+    background-color: ${ctp-r-widget--spinbox--button-bg};
+    border: none;
+    border-left: 1px solid ${ctp-r-widget--spinbox--button-border};
+}
+
+QAbstractSpinBox::up-button
+{
+    subcontrol-position: top right;
+    border-top-right-radius: 2px;
+}
+
+QAbstractSpinBox::down-button
+{
+    subcontrol-position: bottom right;
+    border-bottom-right-radius: 2px;
+}
+
+QAbstractSpinBox::up-button:hover,
+QAbstractSpinBox::down-button:hover
+{
+    background-color: ${ctp-r-widget--spinbox--button-hover-bg};
+}
+
+QAbstractSpinBox::up-button:pressed,
+QAbstractSpinBox::down-button:pressed
+{
+    background-color: ${ctp-r-widget--spinbox--button-pressed-bg};
+}
+
+/* ------------------------------------------------------------------ *
  * Push buttons, tool buttons, toolbars
  * ------------------------------------------------------------------ */
 
@@ -450,10 +510,17 @@ QRadioButton::indicator:hover
     border: 1px solid ${ctp-r-widget--checkbox--indicator-hover-border};
 }
 
+/* The check mark, dash and radio dot are images (icons_indicator.css): once
+ * the indicator is styled, Qt no longer draws them. */
 QCheckBox::indicator:checked,
-QRadioButton::indicator:checked
+QCheckBox::indicator:indeterminate
 {
     background-color: ${ctp-r-widget--checkbox--indicator-checked-bg};
+}
+
+QRadioButton::indicator:checked
+{
+    border: 1px solid ${ctp-r-widget--checkbox--radio-checked-border};
 }
 
 /* ------------------------------------------------------------------ *

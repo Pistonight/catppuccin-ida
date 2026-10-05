@@ -27,6 +27,7 @@ ICONS = "icons"     # generated SVGs (scripts/build-icons.py)
 ROLE_TARGETS = {
     "titlebar": PYTHON,
     "arrows": ICONS,
+    "indicators": ICONS,
 }
 
 NAME_RE = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
