@@ -12,10 +12,11 @@ dependencies = []
 dev = [
     # IDA 9.3 bundles PySide6 6.8.0 (python/PySide6/__init__.py); keep in step.
     "pyside6-essentials==6.8.0",
+    "pyyaml>=6.0.3",
 ]
 
 [tool.uv]
-# Not an installable package: src/ is bundled by scripts/build.py into dist/catppuccin.py.
+# Not an installable package: src/ is bundled by scripts/build.py into dist/plugins/catppuccin.py.
 package = false
 
 [tool.pyright]

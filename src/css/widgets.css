@@ -1,0 +1,592 @@
+/* Qt widgets */
+
+/* ------------------------------------------------------------------ *
+ * Base widget colours and validation hints
+ * ------------------------------------------------------------------ */
+
+QWidget
+{
+    background-color: ${ctp-r-widget--base--bg};
+    color: ${ctp-r-widget--base--fg};
+}
+
+QWidget[field_validity=false]
+{
+    border-color: ${ctp-r-widget--base--invalid-border};
+}
+
+.hint
+{
+    background-color: ${ctp-r-widget--hint--bg};
+    border-color: ${ctp-r-widget--hint--border};
+    color: ${ctp-r-widget--hint--fg};
+}
+
+/* ------------------------------------------------------------------ *
+ * Plain QFrames drawn as boxes, panels or lines
+ * ------------------------------------------------------------------ */
+
+/* Plain QFrames drawn as boxes/panels/lines (Box=1, Panel=2, HLine=4,
+ * VLine=5) otherwise get the native light frame */
+QFrame[frameShape="1"],
+QFrame[frameShape="2"]
+{
+    border: 1px solid ${ctp-r-widget--frame--box-border};
+}
+
+QFrame[frameShape="4"],
+QFrame[frameShape="5"]
+{
+    border: none;
+    background-color: ${ctp-r-widget--frame--line-bg};
+    max-height: 1px;
+}
+
+QFrame[frameShape="5"]
+{
+    max-height: 16777215px;
+    max-width: 1px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Labels
+ * ------------------------------------------------------------------ */
+
+QLabel
+{
+    background: transparent;
+}
+
+QLabel:disabled
+{
+    color: ${ctp-r-widget--label--disabled-fg};
+}
+
+/* ------------------------------------------------------------------ *
+ * Group boxes
+ * ------------------------------------------------------------------ */
+
+QGroupBox
+{
+    margin-top: 5px;
+}
+
+QGroupBox::title
+{
+    subcontrol-origin: margin;
+    subcontrol-position: top center;
+}
+
+LabeledWidgetContainer
+{
+    border: 0;
+    padding: 0;
+}
+
+/* ------------------------------------------------------------------ *
+ * Status bar
+ * ------------------------------------------------------------------ */
+
+QStatusBar QLabel
+{
+    border: none;
+}
+
+QStatusBar::item
+{
+    border: 1px solid ${ctp-r-widget--statusbar--item-border};
+    border-radius: 2px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Tooltips
+ * ------------------------------------------------------------------ */
+
+QToolTip,
+QTipLabel
+{
+    border: 1px solid ${ctp-r-widget--tooltip--border};
+    border-radius: 2px;
+    background: ${ctp-r-widget--tooltip--bg};
+    color: ${ctp-r-widget--tooltip--fg};
+    margin: 0;
+    padding: 0;
+}
+
+/* ------------------------------------------------------------------ *
+ * Splitter handles
+ * ------------------------------------------------------------------ */
+
+QSplitter::handle
+{
+    background-color: ${ctp-r-widget--splitter--handle-bg};
+}
+
+QSplitter::handle:horizontal
+{
+    width: 4px;
+}
+
+QSplitter::handle:vertical
+{
+    height: 4px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Individual IDA dialogs
+ * ------------------------------------------------------------------ */
+
+JumpAnywhereDialog
+{
+    background-color: ${ctp-r-widget--dialog--jump-anywhere-bg};
+}
+
+ActionsInspector QLineEdit,
+ActionsInspector QKeySequenceEdit
+{
+    width: 16em;
+}
+
+/* ------------------------------------------------------------------ *
+ * Dock widgets
+ * ------------------------------------------------------------------ */
+
+DockWidgetTitle,
+DockAreaDragTitle
+{
+    border: none;
+    background-color: ${ctp-r-widget--dock--title-bg};
+}
+
+DockWidgetTitle
+{
+    padding: 0px;
+    margin-bottom: 2px;
+}
+
+DockWidgetTitle[active="true"],
+DockAreaDragTitle
+{
+    background-color: ${ctp-r-widget--dock--title-active-bg};
+}
+
+DockWidgetTitle > QPushButton,
+DockAreaDragTitle > QPushButton
+{
+    min-width: 20px;
+    min-height: 20px;
+}
+
+DockWidgetTitle > QPushButton:!hover,
+DockAreaDragTitle > QPushButton:!hover
+{
+    border: none;
+}
+
+DockWidget > QWidget > QAbstractButton
+{
+    background-color: ${ctp-r-widget--dock--button-bg};
+    border-radius: 3px;
+}
+
+@ifdef __MAC__
+/* drawing borders on macOS seems to be glitchy with Qt 5.15.2. see IDA-3041 */
+DockWidgetTitle > QPushButton,
+DockAreaDragTitle > QPushButton
+{
+    border: none;
+}
+@endif
+
+/* ------------------------------------------------------------------ *
+ * Menu bar and menus
+ * ------------------------------------------------------------------ */
+
+QMenuBar,
+QMenuBar::item
+{
+    background-color: ${ctp-r-widget--menubar--bg};
+    color: ${ctp-r-widget--menubar--fg};
+}
+
+QMenuBar::item:selected
+{
+    background-color: ${ctp-r-widget--menubar--item-selected-bg};
+}
+
+QMenu
+{
+    background-color: ${ctp-r-widget--menu--bg};
+    border: 1px solid ${ctp-r-widget--menu--border};
+}
+
+QMenu::item:selected
+{
+    background-color: ${ctp-r-widget--menu--item-selected-bg};
+}
+
+QMenu::item:disabled
+{
+    color: ${ctp-r-widget--menu--item-disabled-fg};
+}
+
+QMenu::separator
+{
+    height: 1px;
+    background-color: ${ctp-r-widget--menu--separator-bg};
+}
+
+/* ------------------------------------------------------------------ *
+ * Text inputs
+ * ------------------------------------------------------------------ */
+
+QTextEdit,
+QPlainTextEdit
+{
+    background-color: ${ctp-r-widget--text-edit--bg};
+    border: 1px solid ${ctp-r-widget--text-edit--border};
+    border-radius: 2px;
+}
+
+QLineEdit
+{
+    background-color: ${ctp-r-widget--line-edit--bg};
+    border: 1px solid ${ctp-r-widget--line-edit--border};
+    min-height: 20px;
+    border-radius: 2px;
+}
+
+QLineEdit:hover,
+QLineEdit:focus
+{
+    border: 1px solid ${ctp-r-widget--line-edit--hover-border};
+}
+
+QLineEdit:disabled
+{
+    color: ${ctp-r-widget--line-edit--disabled-fg};
+}
+
+/* ------------------------------------------------------------------ *
+ * Push buttons, tool buttons, toolbars
+ * ------------------------------------------------------------------ */
+
+QToolBar
+{
+    border: none;
+}
+
+QPushButton
+{
+    background-color: ${ctp-r-widget--button--bg};
+    border: 1px solid ${ctp-r-widget--button--border};
+    text-align: center;
+    min-height: 20px;
+    min-width: 50px;
+    padding: 0 6px 0 6px;
+    border-radius: 2px;
+}
+
+QPushButton:hover,
+QPushButton:default
+{
+    border: 1px solid ${ctp-r-widget--button--hover-border};
+}
+
+QPushButton:pressed
+{
+    background-color: ${ctp-r-widget--button--pressed-bg};
+    border: 1px solid ${ctp-r-widget--button--pressed-border};
+}
+
+QPushButton:disabled
+{
+    color: ${ctp-r-widget--button--disabled-fg};
+}
+
+quick_filter_widget_t > QPushButton
+{
+    min-width: 20px;
+}
+
+TNavBand > QPushButton,
+nav_scroll_button_t,
+RegJumpButton
+{
+    min-height: 0;
+    min-width: 0;
+    padding: 0;
+    border: none;
+}
+
+/* Remove border from IDC/Python switch button */
+CLIWidget > QGroupBox > QPushButton,
+CLIWidget > QGroupBox > QPushButton:hover,
+CLIWidget > QGroupBox > QPushButton:focus
+{
+    border: none;
+}
+
+CLIWidget > QGroupBox
+{
+    margin-top: 0;
+}
+
+QToolButton::menu-button
+{
+    border: none;
+    width: 12px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Combo boxes
+ * ------------------------------------------------------------------ */
+
+/* it seems Qt doesn't account for the checkmark icon when calculating the width
+ * of a combobox menu in dark mode on macOS and linux. we should add it to the margins
+ * so that text isn't clipped */
+@ifndef __NT__
+@def combobox_right_margin 20px;
+@else
+@def combobox_right_margin 0px;
+@endif
+
+QComboBox
+{
+    border: 1px solid ${ctp-r-widget--combobox--border};
+    border-radius: 2px;
+    color: ${ctp-r-widget--combobox--fg};
+    padding: 1px ${combobox_right_margin} 1px 3px;
+}
+
+QComboBox:!editable
+{
+    background-color: ${ctp-r-widget--combobox--not-editable-bg};
+}
+
+QComboBox:hover,
+QComboBox:focus
+{
+    border: 1px solid ${ctp-r-widget--combobox--hover-border};
+}
+
+QComboBox > QLineEdit,
+QComboBox > QLineEdit:hover,
+QComboBox > QLineEdit:focus
+{
+    border: none;
+    min-height: default;
+}
+
+QComboBox::drop-down
+{
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 15px;
+    border-left: 1px solid ${ctp-r-widget--combobox--drop-down-border};
+}
+
+QComboBox QAbstractItemView
+{
+    background-color: ${ctp-r-widget--combobox--popup-bg};
+    border: 1px solid ${ctp-r-widget--combobox--popup-border};
+    selection-background-color: ${ctp-r-widget--combobox--popup-selection-bg};
+}
+
+/* ------------------------------------------------------------------ *
+ * Check boxes and radio buttons
+ * ------------------------------------------------------------------ */
+
+QCheckBox::indicator,
+QRadioButton::indicator
+{
+    background-color: ${ctp-r-widget--checkbox--indicator-bg};
+    border: 1px solid ${ctp-r-widget--checkbox--indicator-border};
+    width: 12px;
+    height: 12px;
+}
+
+QRadioButton::indicator
+{
+    border-radius: 7px;
+}
+
+QCheckBox::indicator:hover,
+QRadioButton::indicator:hover
+{
+    border: 1px solid ${ctp-r-widget--checkbox--indicator-hover-border};
+}
+
+QCheckBox::indicator:checked,
+QRadioButton::indicator:checked
+{
+    background-color: ${ctp-r-widget--checkbox--indicator-checked-bg};
+}
+
+/* ------------------------------------------------------------------ *
+ * Tab bars and tab panes
+ * ------------------------------------------------------------------ */
+
+QTabBar::tab
+{
+    background-color: ${ctp-r-widget--tab--bg};
+    color: ${ctp-r-widget--tab--fg};
+    padding: 3px 8px;
+}
+
+QTabBar::tab:selected
+{
+    background-color: ${ctp-r-widget--tab--selected-bg};
+    color: ${ctp-r-widget--tab--selected-fg};
+}
+
+QTabBar::tab:hover
+{
+    background-color: ${ctp-r-widget--tab--hover-bg};
+}
+
+QTabWidget::pane
+{
+    border: 1px solid ${ctp-r-widget--tab--pane-border};
+    background-color: ${ctp-r-widget--tab--pane-bg};
+    top: -1px;
+}
+
+QTabWidget::tab-bar
+{
+    left: 2px;
+}
+
+QTabBar QToolButton
+{
+    background-color: ${ctp-r-widget--tab--scroll-button-bg};
+    border: none;
+}
+
+/* ------------------------------------------------------------------ *
+ * Tables, lists and trees
+ * ------------------------------------------------------------------ */
+
+QTableView
+{
+    border: 1px solid ${ctp-r-widget--item-view--table-border};
+    background-color: ${ctp-r-widget--item-view--table-bg};
+    alternate-background-color: ${ctp-r-widget--item-view--table-alt-bg};
+    gridline-color: ${ctp-r-widget--item-view--table-grid};
+}
+
+EditContainer,
+ChooserContainer,
+QGroupBox,
+QListView,
+QTreeView
+{
+    border: 1px solid ${ctp-r-widget--item-view--container-border};
+    border-radius: 2px;
+}
+
+QListView,
+QTreeView
+{
+    background-color: ${ctp-r-widget--item-view--list-bg};
+}
+
+/* Use default selection color on macOS, it matches the native dark theme */
+@ifndef __MAC__
+
+QTreeView::item:selected,
+QListView::item:selected,
+QTableView::item:selected,
+QTreeView::branch:selected
+{
+    background-color: ${ctp-r-widget--item-view--selected-bg};
+    color: ${ctp-r-widget--item-view--selected-fg};
+}
+
+@endif
+
+/* ------------------------------------------------------------------ *
+ * Table and tree headers
+ * ------------------------------------------------------------------ */
+
+QHeaderView::section
+{
+    background-color: ${ctp-r-widget--header--bg};
+    color: ${ctp-r-widget--header--fg};
+    border: none;
+    border-left: 1px solid ${ctp-r-widget--header--border};
+    padding: 3px;
+}
+
+QHeaderView:horizontal::section
+{
+    min-height: 20px;
+}
+
+QTableCornerButton::section
+{
+    background: ${ctp-r-widget--header--corner-bg};
+    border: none;
+}
+
+/* ------------------------------------------------------------------ *
+ * Scrollbars
+ * ------------------------------------------------------------------ */
+
+QScrollBar
+{
+    background-color: ${ctp-r-widget--scrollbar--bg};
+    width: 14px;
+    height: 14px;
+    margin: 0;
+}
+
+QScrollBar::sub-line,
+QScrollBar::add-line
+{
+    width: 0;
+    height: 0;
+}
+
+QScrollBar::add-page,
+QScrollBar::sub-page
+{
+    background: none;
+}
+
+QScrollBar::handle
+{
+    background-color: ${ctp-r-widget--scrollbar--handle-bg};
+    margin: 3px;
+    border-radius: 4px;
+}
+
+QScrollBar::handle:hover
+{
+    background-color: ${ctp-r-widget--scrollbar--handle-hover-bg};
+}
+
+QScrollBar::handle:vertical
+{
+    min-height: 20px;
+}
+
+QScrollBar::handle:horizontal
+{
+    min-width: 20px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Choosers (lists like Functions, Names)
+ * ------------------------------------------------------------------ */
+
+chooser_widget_t,
+chooser_widget_t[os-dark-theme="true"],
+standalone_dirtree_widget_t,
+standalone_dirtree_widget_t[os-dark-theme="true"]
+{
+    qproperty-highlight-bg-default    : ${ctp-r-widget--chooser--highlight-bg};
+    qproperty-highlight-bg-selected   : ${ctp-r-widget--chooser--highlight-selected-bg};
+    qproperty-cut-text-color-default  : ${ctp-r-widget--chooser--cut-text-fg};
+    qproperty-cut-text-color-selected : ${ctp-r-widget--chooser--cut-text-selected-fg};
+}

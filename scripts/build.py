@@ -1,0 +1,157 @@
+"""
+Bundle the plugin sources in src/ into a single file.
+
+    uv run scripts/build.py    -> dist/plugins/catppuccin.py
+
+(The theme CSS is built by scripts/build-css.py.)
+
+src/main.py is the entry point. Every sibling module it imports (directly or
+indirectly) is inlined above it in dependency order; imports of src modules
+are dropped and all other top-level imports are hoisted to the top.
+
+Rules for src/, so the flattened file behaves like the modules did:
+- import src modules as `from module import name`, never `import module`
+- top-level names must be unique across all src modules
+"""
+
+import ast
+import os
+
+from common.errors import ScriptError, run
+from common.paths import DIST, SRC, rel
+
+OUT = os.path.join(DIST, "plugins", "catppuccin.py")
+ENTRY = "main"
+
+
+def _is_local(name):
+    return name is not None and os.path.isfile(os.path.join(SRC, name + ".py"))
+
+
+def _defined_names(tree):
+    names = set()
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            names.add(node.name)
+        elif isinstance(node, (ast.Assign, ast.AnnAssign)):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            for t in targets:
+                for n in ast.walk(t):
+                    if isinstance(n, ast.Name):
+                        names.add(n.id)
+    return names
+
+
+class Module:
+    def __init__(self, name):
+        self.name = name
+        self.path = os.path.join(SRC, name + ".py")
+        with open(self.path, encoding="utf-8") as f:
+            self.source = f.read()
+        self.lines = self.source.splitlines()
+        self.tree = ast.parse(self.source, self.path)
+        self.defined = _defined_names(self.tree)
+        self.deps = []            # local modules, in import order
+        self.imports = []         # external import statements (source text)
+        self.local_imports = []   # (module, [names], lineno)
+        self.drop = set()         # 0-based line numbers to leave out
+        self.docstring = None     # source text, copied verbatim
+
+        body = self.tree.body
+        if ast.get_docstring(self.tree) is not None:
+            self.docstring = self._text(body[0])
+            self._drop(body[0])
+        for node in body:
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    if _is_local(alias.name):
+                        raise ScriptError(
+                            "%s:%d: use `from %s import ...`, not `import %s`"
+                            % (self.path, node.lineno, alias.name, alias.name))
+                self.imports.append(self._text(node))
+                self._drop(node)
+            elif isinstance(node, ast.ImportFrom):
+                if node.level == 0 and _is_local(node.module):
+                    names = [a.name for a in node.names]
+                    if "*" in names or any(a.asname for a in node.names):
+                        raise ScriptError("%s:%d: no `*` or `as` when importing src modules"
+                                         % (self.path, node.lineno))
+                    self.deps.append(node.module)
+                    self.local_imports.append((node.module, names, node.lineno))
+                else:
+                    self.imports.append(self._text(node))
+                self._drop(node)
+
+    def _drop(self, node):
+        self.drop.update(range(node.lineno - 1, node.end_lineno))
+
+    def _text(self, node):
+        return "\n".join(self.lines[node.lineno - 1:node.end_lineno])
+
+    def body(self):
+        kept = [l for i, l in enumerate(self.lines) if i not in self.drop]
+        return "\n".join(kept).strip("\n")
+
+
+def _collect(name, modules, order, visiting):
+    if name in modules:
+        return
+    if name in visiting:
+        raise ScriptError("import cycle through src/%s.py" % name)
+    visiting.add(name)
+    mod = Module(name)
+    for dep in mod.deps:
+        _collect(dep, modules, order, visiting)
+    visiting.discard(name)
+    modules[name] = mod
+    order.append(name)
+
+
+def build_plugin():
+    modules, order = {}, []
+    _collect(ENTRY, modules, order, set())
+
+    # every name imported from a src module must exist there
+    for mod in modules.values():
+        for dep, names, lineno in mod.local_imports:
+            missing = [n for n in names if n not in modules[dep].defined]
+            if missing:
+                raise ScriptError("%s:%d: %s not defined at top level of src/%s.py"
+                                 % (mod.path, lineno, ", ".join(missing), dep))
+
+    # top-level names share one namespace once flattened
+    owner = {}
+    for name in order:
+        for n in modules[name].defined:
+            if n in owner:
+                raise ScriptError("`%s` is defined in both src/%s.py and src/%s.py"
+                                 % (n, owner[n], name))
+            owner[n] = name
+
+    imports = []
+    for name in order:
+        for imp in modules[name].imports:
+            if imp not in imports:
+                imports.append(imp)
+    imports.sort(key=lambda s: not s.startswith("from __future__"))
+
+    entry = modules[ENTRY]
+    parts = []
+    if entry.docstring is not None:
+        parts.append(entry.docstring)
+    parts.append("# Generated by scripts/build.py from src/ -- edit the sources, not this file.")
+    parts.append("\n".join(imports))
+    for name in order:
+        parts.append("# " + "-" * 68 + "\n# src/%s.py\n# " % name + "-" * 68
+                     + "\n\n" + modules[name].body())
+    output = "\n\n\n".join(parts) + "\n"
+
+    compile(output, OUT, "exec")
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    with open(OUT, "w", encoding="utf-8", newline="\n") as f:
+        f.write(output)
+    print("built %s from %s" % (rel(OUT), ", ".join("src/%s.py" % n for n in order)))
+
+
+if __name__ == "__main__":
+    run(build_plugin, "build")

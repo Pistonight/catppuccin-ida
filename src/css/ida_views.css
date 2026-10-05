@@ -1,0 +1,267 @@
+/* IDA views: listing backgrounds, gutter, diff, debugger, graphs, navigation band */
+
+/* ------------------------------------------------------------------ *
+ * Listing gutter: address prefix, opcode bytes, jump arrows
+ * ------------------------------------------------------------------ */
+
+CustomIDAMemo,
+CustomIDAMemo[os-dark-theme="true"]
+{
+    /* Address prefix and opcode bytes */
+    qproperty-line-fg-line-prefix         : ${ctp-r-ida-view--gutter--line-fg--line-prefix};         /* Line prefix                                   */
+    qproperty-line-fg-opcode-byte         : ${ctp-r-ida-view--gutter--line-fg--opcode-byte};       /* Opcode bytes                                  */
+
+    /* Line prefix colours */
+    qproperty-line-pfx-libfunc            : ${ctp-r-ida-view--gutter--line-pfx--libfunc};    /* Library function                              */
+    qproperty-line-pfx-func               : ${ctp-r-ida-view--gutter--line-pfx--func};       /* Regular function                              */
+    qproperty-line-pfx-insn               : ${ctp-r-ida-view--gutter--line-pfx--insn};       /* Single instruction                            */
+    qproperty-line-pfx-data               : ${ctp-r-ida-view--gutter--line-pfx--data};       /* Data bytes                                    */
+    qproperty-line-pfx-unexplored         : ${ctp-r-ida-view--gutter--line-pfx--unexplored}; /* Unexplored byte                               */
+    qproperty-line-pfx-extern             : ${ctp-r-ida-view--gutter--line-pfx--extern};     /* External name definition segment              */
+    qproperty-line-pfx-current-line       : ${ctp-r-ida-view--gutter--line-pfx--current-line};        /* Current line                                  */
+    qproperty-line-pfx-hidden-line        : ${ctp-r-ida-view--gutter--line-pfx--hidden-line};        /* Hidden line                                   */
+    qproperty-line-pfx-lumina             : ${ctp-r-ida-view--gutter--line-pfx--lumina};     /* Lumina                                        */
+}
+
+/* Jump arrows left of the disassembly */
+TextArrows
+{
+    qproperty-jump-in-function          : ${ctp-r-ida-view--text-arrows--jump-in-function};
+    qproperty-jump-external-to-function : ${ctp-r-ida-view--text-arrows--jump-external-to-function};
+    qproperty-jump-under-cursor         : ${ctp-r-ida-view--text-arrows--jump-under-cursor};
+    qproperty-jump-target               : ${ctp-r-ida-view--text-arrows--jump-target};
+    qproperty-register-target           : ${ctp-r-ida-view--text-arrows--register-target};
+    qproperty-bpt-possible              : ${ctp-r-ida-view--text-arrows--bpt-possible};
+}
+
+/* ------------------------------------------------------------------ *
+ * Listing backgrounds, highlights and overlays
+ * ------------------------------------------------------------------ */
+
+CustomIDAMemo,
+CustomIDAMemo[os-dark-theme="true"]
+{
+    /* Backgrounds */
+    qproperty-line-bg-default             : ${ctp-r-ida-view--background--line-bg--default};          /* Default background                            */
+    qproperty-line-bg-selected            : ${ctp-r-ida-view--background--line-bg--selected};     /* Selected background                           */
+    qproperty-line-bg-hint                : ${ctp-r-ida-view--background--line-bg--hint};            /* Hint background                               */
+    qproperty-line-bg-highlight           : ${ctp-r-ida-view--background--line-bg--highlight};     /* Same-identifier highlight                     */
+    qproperty-line-bg-highlight-2         : ${ctp-r-ida-view--background--line-bg--highlight-2};
+    qproperty-line-bg-highlight-3         : ${ctp-r-ida-view--background--line-bg--highlight-3};
+    qproperty-line-bg-highlight-4         : ${ctp-r-ida-view--background--line-bg--highlight-4};
+    qproperty-line-bg-highlight-5         : ${ctp-r-ida-view--background--line-bg--highlight-5};
+    qproperty-line-bg-highlight-6         : ${ctp-r-ida-view--background--line-bg--highlight-6};
+    qproperty-line-bg-highlight-7         : ${ctp-r-ida-view--background--line-bg--highlight-7};
+    qproperty-line-bg-highlight-8         : ${ctp-r-ida-view--background--line-bg--highlight-8};
+
+    /* Background overlays */
+    qproperty-line-bgovl-current-line     : ${ctp-r-ida-view--background--line-bgovl--current-line};
+    qproperty-line-bgovl-trace            : ${ctp-r-ida-view--background--line-bgovl--trace};
+    qproperty-line-bgovl-trace-ovl        : ${ctp-r-ida-view--background--line-bgovl--trace-ovl};
+    qproperty-line-bgovl-bookmark         : ${ctp-r-ida-view--background--line-bgovl--bookmark};
+    qproperty-bookmark-star-outline       : ${ctp-r-ida-view--background--bookmark-star-outline};
+}
+
+CustomIDAMemo[hints="true"]
+{
+    qproperty-line-bg-default             : ${ctp-r-ida-view--hints--line-bg--default};
+}
+
+/* ------------------------------------------------------------------ *
+ * Diff / merge regions
+ * ------------------------------------------------------------------ */
+
+TChooser,
+generic_dirtree_widget_t
+{
+    qproperty-highlight-bg-diff-region-pick:             ${ctp-r-ida-view--diff--chooser--pick};
+    qproperty-highlight-bg-diff-region-leave:            ${ctp-r-ida-view--diff--chooser--leave};
+    qproperty-highlight-bg-diff-region-conflict:         ${ctp-r-ida-view--diff--chooser--conflict};
+
+    qproperty-highlight-bg-diff-region-pick-current:     ${ctp-r-ida-view--diff--chooser--pick-current};
+    qproperty-highlight-bg-diff-region-leave-current:    ${ctp-r-ida-view--diff--chooser--leave-current};
+    qproperty-highlight-bg-diff-region-conflict-current: ${ctp-r-ida-view--diff--chooser--conflict-current};
+}
+
+diff_fringe_t
+{
+    background-color: ${ctp-r-ida-view--diff--fringe--bg};
+
+    qproperty-diff-region-pick:                        ${ctp-r-ida-view--diff--fringe--pick};
+    qproperty-diff-region-pick-boundaries:             ${ctp-r-ida-view--diff--fringe--pick-boundaries};
+    qproperty-diff-region-pick-current:                ${ctp-r-ida-view--diff--fringe--pick-current};
+    qproperty-diff-region-pick-current-boundaries:     ${ctp-r-ida-view--diff--fringe--pick-current-boundaries};
+
+    qproperty-diff-region-leave:                       ${ctp-r-ida-view--diff--fringe--leave};
+    qproperty-diff-region-leave-boundaries:            ${ctp-r-ida-view--diff--fringe--leave-boundaries};
+    qproperty-diff-region-leave-current:               ${ctp-r-ida-view--diff--fringe--leave-current};
+    qproperty-diff-region-leave-current-boundaries:    ${ctp-r-ida-view--diff--fringe--leave-current-boundaries};
+
+    qproperty-diff-region-conflict:                    ${ctp-r-ida-view--diff--fringe--conflict};
+    qproperty-diff-region-conflict-boundaries:         ${ctp-r-ida-view--diff--fringe--conflict-boundaries};
+    qproperty-diff-region-conflict-current:            ${ctp-r-ida-view--diff--fringe--conflict-current};
+    qproperty-diff-region-conflict-current-boundaries: ${ctp-r-ida-view--diff--fringe--conflict-current-boundaries};
+}
+
+CustomIDAMemo,
+CustomIDAMemo[os-dark-theme="true"]
+{
+    /* Diff / merge */
+    qproperty-line-bgovl-diff-region-pick             : ${ctp-r-ida-view--diff--listing--pick};
+    qproperty-line-bgovl-diff-region-leave            : ${ctp-r-ida-view--diff--listing--leave};
+    qproperty-line-bgovl-diff-region-conflict         : ${ctp-r-ida-view--diff--listing--conflict};
+    qproperty-line-bgovl-diff-region-pick-current     : ${ctp-r-ida-view--diff--listing--pick-current};
+    qproperty-line-bgovl-diff-region-leave-current    : ${ctp-r-ida-view--diff--listing--leave-current};
+    qproperty-line-bgovl-diff-region-conflict-current : ${ctp-r-ida-view--diff--listing--conflict-current};
+}
+
+/* ------------------------------------------------------------------ *
+ * Breakpoint line backgrounds
+ * ------------------------------------------------------------------ */
+
+CustomIDAMemo,
+CustomIDAMemo[os-dark-theme="true"]
+{
+    /* Breakpoints */
+    qproperty-line-bg-bpt-enabled         : ${ctp-r-ida-view--breakpoint--enabled};
+    qproperty-line-bg-bpt-disabled        : ${ctp-r-ida-view--breakpoint--disabled};
+    qproperty-line-bg-bpt-unavailable     : ${ctp-r-ida-view--breakpoint--unavailable};
+}
+
+/* ------------------------------------------------------------------ *
+ * Debugger: pointer dereferencing and the debugging listing
+ * ------------------------------------------------------------------ */
+
+CustomIDAMemo,
+CustomIDAMemo[os-dark-theme="true"]
+{
+    /* Pointer dereferencing */
+    qproperty-line-fg-deref-code          : ${ctp-r-ida-view--debugger--deref--code};
+    qproperty-line-fg-deref-writable-code : ${ctp-r-ida-view--debugger--deref--writable-code};
+    qproperty-line-fg-deref-data          : ${ctp-r-ida-view--debugger--deref--data};
+    qproperty-line-fg-deref-rodata        : ${ctp-r-ida-view--debugger--deref--rodata};
+    qproperty-line-fg-deref-stack         : ${ctp-r-ida-view--debugger--deref--stack};
+    qproperty-line-fg-deref-number        : ${ctp-r-ida-view--debugger--deref--number};
+}
+
+CustomIDAMemo[debugging="true"]
+{
+    qproperty-line-bg-default             : ${ctp-r-ida-view--debugger--line-bg--default};
+    qproperty-line-bgovl-current-ip       : ${ctp-r-ida-view--debugger--line-bgovl--current-ip};
+}
+
+/* ------------------------------------------------------------------ *
+ * Debugger register view
+ * ------------------------------------------------------------------ */
+
+TCpuRegs,
+TCpuRegs[os-dark-theme="true"]
+{
+    background-color: ${ctp-r-ida-view--registers--bg};
+    qproperty-register-defined     : ${ctp-r-ida-view--registers--defined};
+    qproperty-register-changed     : ${ctp-r-ida-view--registers--changed};
+    qproperty-register-edited      : ${ctp-r-ida-view--registers--edited};
+    qproperty-register-unavailable : ${ctp-r-ida-view--registers--unavailable};
+}
+
+TCpuRegs QPushButton
+{
+    background: transparent;
+}
+
+TCpuRegs ui_label_t,
+TCpuRegs ui_label_t[os-dark-theme="true"]
+{
+    color: ${ctp-r-ida-view--registers--label-fg};
+}
+
+/* ------------------------------------------------------------------ *
+ * Graph view
+ * ------------------------------------------------------------------ */
+
+CustomIDAMemo,
+CustomIDAMemo[os-dark-theme="true"]
+{
+    qproperty-graph-bg-top                : ${ctp-r-ida-view--graph--bg-top};
+    qproperty-graph-bg-bottom             : ${ctp-r-ida-view--graph--bg-bottom};
+    qproperty-graph-node-title-normal     : ${ctp-r-ida-view--graph--node-title-normal};
+    qproperty-graph-node-title-selected   : ${ctp-r-ida-view--graph--node-title-selected};
+    qproperty-graph-node-title-current    : ${ctp-r-ida-view--graph--node-title-current};
+    qproperty-graph-node-frame-group      : ${ctp-r-ida-view--graph--node-frame-group};
+    qproperty-graph-node-frame-selected   : ${ctp-r-ida-view--graph--node-frame-selected};
+    qproperty-graph-node-shadow           : ${ctp-r-ida-view--graph--node-shadow};
+    qproperty-graph-node-high1            : ${ctp-r-ida-view--graph--node-high1};
+    qproperty-graph-node-high2            : ${ctp-r-ida-view--graph--node-high2};
+    qproperty-graph-node-foreign          : ${ctp-r-ida-view--graph--node-foreign};
+    qproperty-graph-edge-normal           : ${ctp-r-ida-view--graph--edge-normal};
+    qproperty-graph-edge-yes              : ${ctp-r-ida-view--graph--edge-yes};
+    qproperty-graph-edge-no               : ${ctp-r-ida-view--graph--edge-no};
+    qproperty-graph-edge-high             : ${ctp-r-ida-view--graph--edge-high};
+    qproperty-graph-edge-current          : ${ctp-r-ida-view--graph--edge-current};
+    qproperty-graph-edge-selected         : ${ctp-r-ida-view--graph--edge-selected};
+}
+
+/* ------------------------------------------------------------------ *
+ * Graph overview
+ * ------------------------------------------------------------------ */
+
+GraphMiniView
+{
+    qproperty-fog        : ${ctp-r-ida-view--graph-overview--fog};
+    qproperty-crosshairs : ${ctp-r-ida-view--graph-overview--crosshairs};
+}
+
+/* ------------------------------------------------------------------ *
+ * Generic graph viewer (e.g. function call graph)
+ * ------------------------------------------------------------------ */
+
+viewer_t,
+viewer_t[os-dark-theme="true"]
+{
+    qproperty-node-bg-import  : ${ctp-r-ida-view--graph-viewer--node-bg-import};
+    qproperty-node-bg-code    : ${ctp-r-ida-view--graph-viewer--node-bg-code};
+    qproperty-node-bg-data    : ${ctp-r-ida-view--graph-viewer--node-bg-data};
+    qproperty-node-bg-default : ${ctp-r-ida-view--graph-viewer--node-bg-default};
+    qproperty-node-border     : ${ctp-r-ida-view--graph-viewer--node-border};
+    qproperty-node-text       : ${ctp-r-ida-view--graph-viewer--node-text};
+    qproperty-edge-default    : ${ctp-r-ida-view--graph-viewer--edge-default};
+    qproperty-edge-highlighted: ${ctp-r-ida-view--graph-viewer--edge-highlighted};
+    qproperty-viewer-bg       : ${ctp-r-ida-view--graph-viewer--viewer-bg};
+}
+
+viewer_t QWidget,
+viewer_t[os-dark-theme="true"] QWidget
+{
+    color: ${ctp-r-ida-view--graph-viewer--widget-fg};
+    background-color: ${ctp-r-ida-view--graph-viewer--widget-bg};
+}
+
+/* ------------------------------------------------------------------ *
+ * Navigation band
+ * ------------------------------------------------------------------ */
+
+navband_t,
+navband_t[os-dark-theme="true"]
+{
+    qproperty-lib-function    : ${ctp-r-ida-view--navband--lib-function};
+    qproperty-function        : ${ctp-r-ida-view--navband--function};
+    qproperty-code            : ${ctp-r-ida-view--navband--code};
+    qproperty-data            : ${ctp-r-ida-view--navband--data};
+    qproperty-undefined       : ${ctp-r-ida-view--navband--undefined};
+    qproperty-extern          : ${ctp-r-ida-view--navband--extern};
+    qproperty-lumina-function : ${ctp-r-ida-view--navband--lumina-function};
+
+    qproperty-hl-lib-function    : @lighten(${ctp-r-ida-view--navband--hl-lib-function}, 115);
+    qproperty-hl-function        : @lighten(${ctp-r-ida-view--navband--hl-function}, 115);
+    qproperty-hl-code            : @lighten(${ctp-r-ida-view--navband--hl-code}, 115);
+    qproperty-hl-data            : @lighten(${ctp-r-ida-view--navband--hl-data}, 115);
+    qproperty-hl-undefined       : @lighten(${ctp-r-ida-view--navband--hl-undefined}, 115);
+    qproperty-hl-extern          : @lighten(${ctp-r-ida-view--navband--hl-extern}, 115);
+    qproperty-hl-lumina-function : @lighten(${ctp-r-ida-view--navband--hl-lumina-function}, 115);
+    qproperty-hl-outline         : ${ctp-r-ida-view--navband--hl-outline};
+
+    qproperty-error                : ${ctp-r-ida-view--navband--error};
+    qproperty-gap                  : ${ctp-r-ida-view--navband--gap};
+    qproperty-cursor               : ${ctp-r-ida-view--navband--cursor};
+    qproperty-auto-analysis-cursor : ${ctp-r-ida-view--navband--auto-analysis-cursor};
+}

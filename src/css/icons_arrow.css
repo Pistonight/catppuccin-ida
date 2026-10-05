@@ -1,0 +1,107 @@
+/* Arrow images: Qt draws these black by default, so every arrow sub-control gets an image from icons/ */
+
+QComboBox::down-arrow
+{
+    image: url("$RELPATH/icons/arrow-down.svg");
+}
+
+QToolButton::menu-indicator,
+QToolButton::menu-arrow
+{
+    image: url("$RELPATH/icons/arrow-down.svg");
+}
+
+QToolButton::menu-arrow:hover,
+QToolButton::menu-indicator:hover
+{
+    image: url("$RELPATH/icons/arrow-down-hover.svg");
+}
+
+QToolButton::up-arrow       { image: url("$RELPATH/icons/arrow-up.svg"); }
+
+QToolButton::down-arrow     { image: url("$RELPATH/icons/arrow-down.svg"); }
+
+QToolButton::left-arrow     { image: url("$RELPATH/icons/arrow-left.svg"); }
+
+QToolButton::right-arrow    { image: url("$RELPATH/icons/arrow-right.svg"); }
+
+QToolButton::up-arrow:hover    { image: url("$RELPATH/icons/arrow-up-hover.svg"); }
+
+QToolButton::down-arrow:hover  { image: url("$RELPATH/icons/arrow-down-hover.svg"); }
+
+QToolButton::left-arrow:hover  { image: url("$RELPATH/icons/arrow-left-hover.svg"); }
+
+QToolButton::right-arrow:hover { image: url("$RELPATH/icons/arrow-right-hover.svg"); }
+
+QToolButton::up-arrow:disabled    { image: url("$RELPATH/icons/arrow-up-disabled.svg"); }
+
+QToolButton::down-arrow:disabled  { image: url("$RELPATH/icons/arrow-down-disabled.svg"); }
+
+QToolButton::left-arrow:disabled  { image: url("$RELPATH/icons/arrow-left-disabled.svg"); }
+
+QToolButton::right-arrow:disabled { image: url("$RELPATH/icons/arrow-right-disabled.svg"); }
+
+QMenu::right-arrow
+{
+    image: url("$RELPATH/icons/arrow-right.svg");
+}
+
+QHeaderView::up-arrow
+{
+    image: url("$RELPATH/icons/arrow-up.svg");
+    width: 8px;
+}
+
+QHeaderView::down-arrow
+{
+    image: url("$RELPATH/icons/arrow-down.svg");
+    width: 8px;
+}
+
+QSpinBox::up-arrow,
+QDoubleSpinBox::up-arrow
+{
+    image: url("$RELPATH/icons/arrow-up.svg");
+}
+
+QSpinBox::down-arrow,
+QDoubleSpinBox::down-arrow
+{
+    image: url("$RELPATH/icons/arrow-down.svg");
+}
+
+QComboBox::down-arrow:disabled
+{
+    image: url("$RELPATH/icons/arrow-down-disabled.svg");
+}
+
+/* Tree expanders (styling ::branch disables native rendering, so all four
+ * states are needed) */
+QTreeView::branch:has-children:!has-siblings:closed,
+QTreeView::branch:closed:has-children:has-siblings
+{
+    border-image: none;
+    image: url("$RELPATH/icons/arrow-right.svg");
+}
+
+QTreeView::branch:open:has-children:!has-siblings,
+QTreeView::branch:open:has-children:has-siblings
+{
+    border-image: none;
+    image: url("$RELPATH/icons/arrow-down.svg");
+}
+
+/* Re-introduce branch indicators (styling ::branch disables native rendering) */
+xref_tree_t QTreeView::branch:has-children:!has-siblings:closed,
+xref_tree_t QTreeView::branch:closed:has-children:has-siblings
+{
+    border-image: none;
+    image: url("$RELPATH/icons/arrow-right.svg");
+}
+
+xref_tree_t QTreeView::branch:open:has-children:!has-siblings,
+xref_tree_t QTreeView::branch:open:has-children:has-siblings
+{
+    border-image: none;
+    image: url("$RELPATH/icons/arrow-down.svg");
+}

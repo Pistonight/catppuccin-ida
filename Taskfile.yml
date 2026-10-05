@@ -4,3 +4,8 @@ tasks:
   setup:
     - uv sync
     - uv run scripts/link-ida.py
+
+  build:
+    - uv run scripts/check-css.py
+    - uv run scripts/build-css.py
+    - uv run scripts/build.py

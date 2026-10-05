@@ -1,0 +1,598 @@
+# Constants for code/asset generation
+#
+# Every generated CSS variable is ctp-<kind>-<name>:
+#   ctp-c-<name>  colours: `palette` entries and `tints`
+#   ctp-d-<name>  definitions: named aliases of colours, shared by many roles
+#   ctp-r-<name>  roles: one per place a colour is used in the CSS
+#
+# Below the palette, values refer to other entries without the ctp- prefix,
+# e.g. `c-green` or `d-keyword`. Tints and definitions may only refer to
+# colours (c-); roles may refer to colours or definitions (c- or d-), never to
+# other roles, so nothing chains more than one level.
+#
+# Roles are nested; the namespaces are joined with `--` to form the name, so
+# roles.widget.menu.bg is ctp-r-widget--menu--bg. Names themselves must not
+# contain `--`.
+
+# Color palette, Use hex codes only.
+# These will be defined as ctp-c-<color_name>
+palette:
+  rosewater: '#f5e0dc'
+  flamingo: '#f2cdcd'
+  pink: '#f5c2e7'
+  mauve: '#cba6f7'
+  red: '#f38ba8'
+  maroon: '#eba0ac'
+  peach: '#fab387'
+  yellow: '#f9e2af'
+  green: '#a6e3a1'
+  teal: '#94e2d5'
+  sky: '#89dceb'
+  sapphire: '#74c7ec'
+  blue: '#89b4fa'
+  lavender: '#b4befe'
+  text: '#cdd6f4'
+  subtext1: '#bac2de'
+  subtext0: '#a6adc8'
+  overlay2: '#9399b2'
+  overlay1: '#7f849c'
+  overlay0: '#6c7086'
+  surface2: '#585b70'
+  surface1: '#45475a'
+  surface0: '#313244'
+  base: '#1e1e2e'
+  mantle: '#181825'
+  crust: '#11111b'
+
+# Tints are also colours, defined as ctp-c-<tint_name>. Two kinds:
+#   amount: share of `color` blended onto `onto` (default c-base); opaque
+#   alpha:  `color` with that opacity, emitted as rgba(); for highlights and
+#           overlays drawn on top of other colours
+tints:
+  # Blended onto the base colour (opaque)
+  green-20: { color: c-green, amount: 0.20 }
+  green-35: { color: c-green, amount: 0.35 }
+  red-35: { color: c-red, amount: 0.35 }
+  peach-20: { color: c-peach, amount: 0.20 }
+  peach-35: { color: c-peach, amount: 0.35 }
+  blue-35: { color: c-blue, amount: 0.35 }
+  pink-35: { color: c-pink, amount: 0.35 }
+  grey-20: { color: c-overlay1, amount: 0.20 }
+  grey-35: { color: c-overlay1, amount: 0.35 }
+  # Translucent (alpha), for highlights and overlays drawn over other colours
+  yellow-a25: { color: c-yellow, alpha: 0.25 }
+  mauve-a25: { color: c-mauve, alpha: 0.25 }
+  green-a25: { color: c-green, alpha: 0.25 }
+  sky-a25: { color: c-sky, alpha: 0.25 }
+  peach-a25: { color: c-peach, alpha: 0.25 }
+  pink-a25: { color: c-pink, alpha: 0.25 }
+  teal-a25: { color: c-teal, alpha: 0.25 }
+  lavender-a25: { color: c-lavender, alpha: 0.25 }
+  text-a06: { color: c-text, alpha: 0.06 }
+  blue-a15: { color: c-blue, alpha: 0.15 }
+  sapphire-a15: { color: c-sapphire, alpha: 0.15 }
+  sapphire-a20: { color: c-sapphire, alpha: 0.20 }
+  crust-a55: { color: c-crust, alpha: 0.55 }
+
+# Definitions are aliases for colours, defined as ctp-d-<def_name>.
+definitions:
+  # Syntax (same roles as realgood.css)
+  text: c-text
+  comment: c-overlay2
+  string: c-green
+  escape: c-pink
+  keyword: c-mauve
+  function: c-yellow
+  macro: c-peach
+  type: c-blue
+  operator: c-sapphire
+  delimiter: c-overlay2
+  variable: c-lavender
+  constant: c-peach
+  attribute: c-teal
+  label: c-pink
+  builtin: c-red
+  error: c-red
+  error-dim: c-maroon  # patched bytes, xrefs to tail
+  dim: c-overlay1  # auto comments, prefixes, xrefs
+  faint: c-overlay0  # opcode bytes, hidden lines
+
+  # Window chrome
+  bg: c-mantle  # window and widget background
+  bg-deep: c-crust  # tooltips, shadows
+  view: c-base  # listings, tables, editors
+  surface: c-surface0  # tabs, combos, scrollbar track
+  surface-hi: c-surface1  # selected tab, graph nodes
+  handle: c-surface2  # scrollbar handle
+  border: c-surface0
+  border-strong: c-surface2
+  fg: c-text
+  fg-dim: c-subtext0
+  fg-disabled: c-overlay0
+  accent: c-mauve  # hover / focus borders
+  selection: c-surface1
+  highlight: c-yellow-a25  # search, same-name highlight
+
+  # Status
+  attention: c-yellow  # cursors, bookmarks, changed
+  info: c-sapphire
+  success: c-green
+  warning: c-peach
+
+  # Diff / merge regions: pick, leave, conflict; -dim for regions other than the current one
+  diff-pick: c-green-35
+  diff-pick-dim: c-green-20
+  diff-leave: c-grey-35
+  diff-leave-dim: c-grey-20
+  diff-conflict: c-peach-35
+  diff-conflict-dim: c-peach-20
+
+  # Navigation band, by kind of address range
+  nav-libfunc: c-sapphire
+  nav-function: c-blue
+  nav-code: c-maroon
+  nav-data: c-overlay1
+  nav-undefined: c-peach
+  nav-extern: c-pink
+  nav-lumina: c-green
+
+  # Graphs
+  graph-selected: c-peach  # selected frames and edges
+
+# Roles, defined as ctp-r-<namespace>--...--<key>. Each one is used by exactly
+# one line in the CSS. Comments mirror the CSS they came from.
+roles:
+  # Windows 11 title bar (read by the plugin, not used in CSS)
+  titlebar:
+    caption: c-mantle
+    text: c-text
+    border: c-surface0
+
+  widget:
+    # Base widget colours and validation hints
+    base:
+      bg: d-bg
+      fg: d-fg
+      invalid-border: d-error
+    hint:
+      bg: d-surface
+      border: d-attention
+      fg: d-fg
+
+    # Plain QFrames drawn as boxes, panels or lines
+    frame:
+      # Plain QFrames drawn as boxes/panels/lines (Box=1, Panel=2, HLine=4,
+      # VLine=5) otherwise get the native light frame
+      box-border: d-border
+      line-bg: d-border
+
+    # Labels
+    label:
+      disabled-fg: d-fg-disabled
+
+    # Status bar
+    statusbar:
+      item-border: d-border
+
+    # Tooltips
+    tooltip:
+      border: d-accent
+      bg: d-bg-deep
+      fg: d-fg
+
+    # Splitter handles
+    splitter:
+      handle-bg: d-bg
+
+    # Individual IDA dialogs
+    dialog:
+      jump-anywhere-bg: d-bg
+
+    # Dock widgets
+    dock:
+      title-bg: d-bg
+      title-active-bg: d-surface
+      button-bg: d-bg-deep
+
+    # Menu bar and menus
+    menubar:
+      bg: d-bg
+      fg: d-fg
+      item-selected-bg: d-selection
+    menu:
+      bg: d-bg
+      border: d-border
+      item-selected-bg: d-selection
+      item-disabled-fg: d-fg-disabled
+      separator-bg: d-border
+
+    # Text inputs
+    text-edit:
+      bg: d-view
+      border: d-border
+    line-edit:
+      bg: d-view
+      border: d-border-strong
+      hover-border: d-accent
+      disabled-fg: d-fg-disabled
+
+    # Push buttons, tool buttons, toolbars
+    button:
+      bg: d-surface
+      border: d-border-strong
+      hover-border: d-accent
+      pressed-bg: d-surface-hi
+      pressed-border: c-lavender
+      disabled-fg: d-fg-disabled
+
+    # Combo boxes
+    combobox:
+      border: d-border-strong
+      fg: d-fg
+      not-editable-bg: d-surface
+      hover-border: d-accent
+      drop-down-border: d-border-strong
+      popup-bg: d-bg
+      popup-border: d-border
+      popup-selection-bg: d-selection
+
+    # Check boxes and radio buttons
+    checkbox:
+      indicator-bg: d-view
+      indicator-border: d-border-strong
+      indicator-hover-border: d-accent
+      indicator-checked-bg: d-accent
+
+    # Tab bars and tab panes
+    tab:
+      bg: d-bg
+      fg: d-fg-dim
+      selected-bg: d-surface-hi
+      selected-fg: d-fg
+      hover-bg: d-surface
+      pane-border: d-border
+      pane-bg: d-bg
+      scroll-button-bg: d-bg
+
+    # Tables, lists and trees
+    item-view:
+      table-border: d-border
+      table-bg: d-view
+      table-alt-bg: d-bg
+      table-grid: d-border
+      container-border: d-border
+      list-bg: d-view
+      selected-bg: d-selection
+      selected-fg: d-fg
+
+    # Table and tree headers
+    header:
+      bg: d-bg
+      fg: d-fg-dim
+      border: d-border
+      corner-bg: d-bg
+
+    # Scrollbars
+    scrollbar:
+      bg: d-bg
+      handle-bg: d-handle
+      handle-hover-bg: c-overlay0
+
+    # Choosers (lists like Functions, Names)
+    chooser:
+      highlight-bg: d-highlight
+      highlight-selected-bg: d-highlight
+      cut-text-fg: d-fg-disabled
+      cut-text-selected-fg: d-fg
+
+  highlight:
+    # Output window and script text areas
+    output:
+      fg: d-fg
+      bg: d-view
+    text-area:
+      # Output window / script text areas
+      keyword1: d-keyword
+      keyword2: d-keyword
+      keyword3: d-type
+      string: d-string
+      comment: d-comment
+      preprocessor: d-keyword
+      number: d-constant
+      margin-fg: d-dim
+      margin-header: d-fg
+      counter-fg: d-fg
+      counter-invalid-fg: d-error
+
+    # Script editor (IDC / IDAPython snippets)
+    script-editor:
+      keyword1: d-keyword
+      keyword2: d-keyword
+      keyword3: d-type
+      string: d-string
+      comment: d-comment
+      preprocessor: d-keyword
+      number: d-constant
+
+    # Disassembly, pseudocode and hex view text
+    listing:
+      line-fg:
+        # Pseudocode tokens are re-tagged by the plugin (src/hexrays.py); the
+        # "pseudocode:" notes say which pseudocode token each property ends up
+        # colouring.
+        # Text and comments
+        default: d-text  # Default
+        regular-comment: d-comment  # Regular comment (pseudocode: comments)
+        repeatable-comment: d-comment  # Repeatable comment
+        automatic-comment: d-dim  # Automatic comment
+        extra-line: d-comment  # Extra line
+        # Keywords, operators, delimiters
+        insn: d-keyword  # Instruction mnemonic
+        keyword: d-keyword  # Keywords (pseudocode: if, return)
+        asm-directive: d-operator  # Assembler directive (pseudocode: = == + -> * &)
+        punctuation: d-delimiter  # Punctuation (pseudocode: ( ) ; , .)
+        # Functions
+        code-name: d-function  # Regular code name (pseudocode: functions)
+        dummy-code-name: d-function  # Dummy code name (sub_, loc_)
+        demangled-name: d-function  # Demangled name
+        libfunc: d-function  # Library function name
+        import-name: d-function  # Imported name (pseudocode: imported calls)
+        # Types / modules
+        hidden: d-type  # Hidden name (pseudocode: types, casts)
+        segment-name: d-type  # Segment name
+        # Variables
+        locvar: d-variable  # Local variable name (pseudocode: vars, members)
+        register-name: d-builtin  # Register name (pseudocode: this)
+        # Constants and globals
+        regular-data-name: d-constant  # Regular data name (pseudocode: globals)
+        dummy-data-name: d-constant  # Dummy data name (dword_, off_)
+        unknown-name: d-constant  # Regular unknown name
+        dummy-unknown-name: d-constant  # Dummy unknown name (unk_)
+        numlit-in-insn: d-constant  # Numeric constant (pseudocode: numbers)
+        numlit-in-data: d-constant  # Numeric constant in data directive
+        void-opnd: d-constant  # Void operand
+        macro: d-macro  # Macro / enum member (pseudocode: LODWORD, BYTE1)
+        # Strings
+        strlit-in-insn: d-string  # String constant (pseudocode: strings)
+        charlit-in-insn: d-string  # Char constant (pseudocode: chars)
+        strlit-in-data: d-string  # String constant in data directive
+        charlit-in-data: d-string  # Char constant in data directive
+        # Labels, xrefs, errors
+        alt-opnd: d-label  # Alternative operand (pseudocode: LABEL_12)
+        code-xref: d-comment  # Code reference
+        data-xref: d-dim  # Data reference
+        code-xref-to-tail: d-error  # Code reference to tail byte
+        data-xref-to-tail: d-error-dim  # Data reference to tail byte
+        error: d-error  # Error or problem (pseudocode: MEMORY[], JUMPOUT)
+        # Marks
+        collapsed-line: d-comment  # Collapsed line
+        patched-bytes: d-error-dim  # Patched bytes
+        unsaved-changes: d-warning  # Unsaved changes
+      caret: c-rosewater  # Caret
+
+    # Xref tree
+    xref-tree:
+      function-name: d-function
+      library-function: d-function
+      imported-function: d-function
+      data-name: d-constant
+      regular-data-name: d-constant
+      string-literal: d-string
+      data-string: d-string
+      numeric-constant: d-constant
+      data-numeric: d-constant
+      keyword: d-keyword
+      symbol: d-delimiter
+      register: d-builtin
+      local-name: d-variable
+      code-reference: d-comment
+      data-reference: d-dim
+      prefix: d-dim
+      tree-bg: d-view
+      search-match: d-highlight
+      selected-bg: d-selection
+      selected-fg: d-fg
+
+  ida-view:
+    # Listing gutter: address prefix, opcode bytes, jump arrows
+    gutter:
+      line-fg:
+        # Address prefix and opcode bytes
+        line-prefix: d-dim  # Line prefix
+        opcode-byte: d-faint  # Opcode bytes
+      line-pfx:
+        # Line prefix colours
+        libfunc: c-lavender  # Library function
+        func: c-overlay0  # Regular function
+        insn: c-red  # Single instruction
+        data: c-overlay1  # Data bytes
+        unexplored: c-peach  # Unexplored byte
+        extern: c-pink  # External name definition segment
+        current-line: d-warning  # Current line
+        hidden-line: d-faint  # Hidden line
+        lumina: c-green  # Lumina
+    text-arrows:
+      # Jump arrows left of the disassembly
+      jump-in-function: d-dim
+      jump-external-to-function: d-error
+      jump-under-cursor: d-fg
+      jump-target: d-success
+      register-target: d-info
+      bpt-possible: d-info
+
+    # Listing backgrounds, highlights and overlays
+    background:
+      line-bg:
+        # Backgrounds
+        default: d-view  # Default background
+        selected: d-selection  # Selected background
+        hint: d-bg  # Hint background
+        highlight: d-highlight  # Same-identifier highlight
+        highlight-2: c-mauve-a25
+        highlight-3: c-green-a25
+        highlight-4: c-sky-a25
+        highlight-5: c-peach-a25
+        highlight-6: c-pink-a25
+        highlight-7: c-teal-a25
+        highlight-8: c-lavender-a25
+      line-bgovl:
+        # Background overlays
+        current-line: c-text-a06
+        trace: c-blue-a15
+        trace-ovl: c-sapphire-a15
+        bookmark: d-surface
+      bookmark-star-outline: d-attention
+    hints:
+      line-bg:
+        default: d-bg
+
+    # Diff / merge regions
+    diff:
+      chooser:
+        pick: d-diff-pick-dim
+        leave: d-diff-leave-dim
+        conflict: d-diff-conflict-dim
+        pick-current: d-diff-pick
+        leave-current: d-diff-leave
+        conflict-current: d-diff-conflict
+      fringe:
+        bg: d-view
+        pick: d-diff-pick-dim
+        pick-boundaries: d-diff-pick-dim
+        pick-current: d-diff-pick
+        pick-current-boundaries: c-green
+        leave: d-diff-leave-dim
+        leave-boundaries: d-diff-leave-dim
+        leave-current: d-diff-leave
+        leave-current-boundaries: c-overlay1
+        conflict: d-diff-conflict-dim
+        conflict-boundaries: d-diff-conflict-dim
+        conflict-current: d-diff-conflict
+        conflict-current-boundaries: c-peach
+      listing:
+        # Diff / merge
+        pick: d-diff-pick-dim
+        leave: d-diff-leave-dim
+        conflict: d-diff-conflict-dim
+        pick-current: d-diff-pick
+        leave-current: d-diff-leave
+        conflict-current: d-diff-conflict
+
+    # Breakpoint line backgrounds
+    breakpoint:
+      # Breakpoints
+      enabled: c-red-35
+      disabled: c-green-35
+      unavailable: c-peach-35
+
+    # Debugger: pointer dereferencing and the debugging listing
+    debugger:
+      deref:
+        # Pointer dereferencing
+        code: d-function
+        writable-code: c-red
+        data: d-constant
+        rodata: c-sky
+        stack: c-teal
+        number: c-overlay2
+      line-bg:
+        default: d-bg
+      line-bgovl:
+        current-ip: c-sapphire-a20
+
+    # Debugger register view
+    registers:
+      bg: d-view
+      defined: d-fg
+      changed: d-attention
+      edited: d-warning
+      unavailable: d-fg-disabled
+      label-fg: d-builtin
+
+    # Graph view
+    graph:
+      bg-top: d-bg
+      bg-bottom: d-bg
+      node-title-normal: c-surface0
+      node-title-selected: c-surface2
+      node-title-current: c-surface1
+      node-frame-group: d-attention
+      node-frame-selected: d-graph-selected
+      node-shadow: d-bg-deep
+      node-high1: c-green-20
+      node-high2: c-peach-20
+      node-foreign: d-error
+      edge-normal: c-blue
+      edge-yes: d-success
+      edge-no: d-error
+      edge-high: d-attention
+      edge-current: d-fg
+      edge-selected: d-graph-selected
+
+    # Graph overview
+    graph-overview:
+      fog: c-crust-a55
+      crosshairs: d-attention
+
+    # Generic graph viewer (e.g. function call graph)
+    graph-viewer:
+      node-bg-import: c-pink-35
+      node-bg-code: c-blue-35
+      node-bg-data: c-green-35
+      node-bg-default: d-surface-hi
+      node-border: c-overlay0
+      node-text: d-fg
+      edge-default: c-overlay1
+      edge-highlighted: d-accent
+      viewer-bg: d-view
+      widget-fg: d-fg
+      widget-bg: d-view
+
+    # Navigation band
+    navband:
+      lib-function: d-nav-libfunc
+      function: d-nav-function
+      code: d-nav-code
+      data: d-nav-data
+      undefined: d-nav-undefined
+      extern: d-nav-extern
+      lumina-function: d-nav-lumina
+      # hl-*: hover highlight; the CSS draws these @lighten()ed by 115%
+      hl-lib-function: d-nav-libfunc
+      hl-function: d-nav-function
+      hl-code: d-nav-code
+      hl-data: d-nav-data
+      hl-undefined: d-nav-undefined
+      hl-extern: d-nav-extern
+      hl-lumina-function: d-nav-lumina
+      hl-outline: d-fg
+      error: d-error
+      gap: d-view
+      cursor: d-attention
+      auto-analysis-cursor: d-accent
+
+# TODO: don't touch below yet, work on icon-gen later
+
+# Arrow icons (combo boxes, menus, tree expanders, nav band buttons)
+arrows:
+  normal: subtext0
+  hover: text
+  disabled: surface2
+
+# Recolouring IDA's built-in toolbar/menu icons
+icons:
+  glyph: text           # near-black lines
+  mid: overlay2         # mid greys
+  paper: surface1       # light fills
+  accents:              # saturated colours snap to the nearest of these by hue
+    - red
+    - peach
+    - yellow
+    - green
+    - teal
+    - sky
+    - sapphire
+    - blue
+    - lavender
+    - mauve
+    - pink
