@@ -1,0 +1,28 @@
+[project]
+name = "catppuccin-ida"
+version = "0.1.0"
+description = "Catppuccin theme and companion plugin for IDA 9.x"
+requires-python = ">=3.10"
+# The plugin has no runtime dependencies of its own: IDA provides the ida_*
+# modules and PySide6. The dev group below only mirrors them for editors,
+# type checking and running scripts/build.py.
+dependencies = []
+
+[dependency-groups]
+dev = [
+    # IDA 9.3 bundles PySide6 6.8.0 (python/PySide6/__init__.py); keep in step.
+    "pyside6-essentials==6.8.0",
+]
+
+[tool.uv]
+# Not an installable package: src/ is bundled by scripts/build.py into dist/catppuccin.py.
+package = false
+
+[tool.pyright]
+include = ["src", "scripts"]
+pythonVersion = "3.10"
+# The uv-managed venv (created by `uv sync`)
+venvPath = "."
+venv = ".venv"
+# ida_* modules are not on PyPI. Point the venv at your IDA install once with
+# `uv run scripts/link-ida.py` (auto-detects; writes a .pth into .venv).
