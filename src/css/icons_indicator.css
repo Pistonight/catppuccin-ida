@@ -14,3 +14,10 @@ QRadioButton::indicator:checked
 {
     image: url("$RELPATH/icons/radio-checked.svg");
 }
+
+/* Tab close buttons (e.g. tabbed dock windows): drawn by the style, red in IDA's own theme */
+
+QTabBar::close-button
+{
+    image: url("$RELPATH/icons/plugin/window-close.svg");
+}

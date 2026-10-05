@@ -1,0 +1,15 @@
+[fixed] screenshot6/7: radios and checkboxes
+[fixed] screenshot9: number with up and down arrow input box style
+[fixed] screenshot10: output window has a border
+screenshot11/12: icons for the windows/sub-views are not replaced
+  (but the menu ones are) - possibly different paths
+screenshot13/14: the decompiler tooltip window is not highlighted and has
+  no border - so it's not visible. it should have blue border,
+  and ideally contents highlighted. Also, in the local types window,
+  it is highlighted, but the second row offset is black which makes it
+  not visible
+screenshot15: syntax highlighting in the local types window
+  the base type is blue but derived type/current type is still yellow
+  members should be lavender and not yellow
+screenshot19: the fullscreen/popout/close triple window control
+  color is too dark

@@ -592,3 +592,41 @@ swapped:
     base: [close, c-overlay2]
   libui/resources/chooser_widget/refresh:
     base: [refresh, c-text]
+
+# Dock window icons: window title -> the icon (one of the names above) shown in
+# its tab, header and title bar. IDA draws these from its own icon table, so
+# the plugin sets them by title. A trailing * matches any suffix (IDA View-A).
+# Values may also be plugin/<name> for an icon in the `plugin` section.
+windows:
+  "IDA View*": WindowOpen
+  "Hex View*": ToggleDump
+  Exports: OpenExports
+  Imports: OpenImports
+  Names: OpenNames
+  Functions: OpenFunctions
+  Strings: OpenStrings
+  Segments: OpenSegments
+  Segment Registers: OpenSegmentRegisters
+  Signatures: OpenSignatures
+  Type Libraries: OpenTypeLibraries
+  Local Types: OpenLocalTypes
+  "Xref Graph*": OpenXrefs
+  Bookmarks: Bookmarks
+  Problems: OpenProblems
+  Patched bytes: PatchedBytes
+  Undo history: ShowUndoHistory
+  Output: OutputWindow
+  "Pseudocode*": plugin/window-pseudocode
+  "Microcode*": plugin/window-microcode
+
+# Icons IDA has no named icon for (used by the plugin and the CSS), built to
+# icons/plugin/<name>.svg
+plugin:
+  # Close button in dock window headers and tabs (also QTabBar::close-button)
+  window-close:
+    base: [close, c-overlay2]
+  # Decompiler windows (IDA's icons for these are unnamed)
+  window-pseudocode:
+    base: [code, c-mauve]
+  window-microcode:
+    base: [chip, c-peach]

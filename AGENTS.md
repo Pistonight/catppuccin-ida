@@ -25,8 +25,8 @@ Taskfile.yml chain them.
 | `./x link-ida [dir]` | finds IDA (highest `C:\Program Files\IDA Professional <ver>`, or `$IDADIR`, or `dir`), writes `.venv/.../ida.pth` (so editors see `ida_*`) and `.cache/IDA_LOCATION.txt` |
 | `./x check-css` | validates `src/css/` against `config.yaml` (rules below) |
 | `./x build-css` | `dist/themes/catppuccin/theme.css` and `src/color_gen.py` |
-| `./x build-icons` | `dist/themes/catppuccin/icons/` (arrows, menu icons) and `.cache/ida_codicon.html` preview |
-| `./x build` | bundles `src/*.py` into `dist/plugins/catppuccin.py` (needs `build-css` first, for `color_gen.py`) |
+| `./x build-icons` | `dist/themes/catppuccin/icons/` (arrows, menu icons, ...), `src/icons_gen.py` and `.cache/ida_codicon.html` preview |
+| `./x build` | bundles `src/*.py` into `dist/plugins/catppuccin.py` (needs `build-css` and `build-icons` first, for the `*_gen.py`) |
 | `./x install [dir]` / `./x uninstall [dir]` | copy/remove `dist/` into IDA's user dir (default `%APPDATA%\Hex-Rays\IDA Pro`) |
 | `./x dump-icons` | runs IDA headless to list its built-in icons into `src/icons.txt`; preview in `.cache/ida_icon_dump.html` |
 | `./x extract-modifiers` | regenerates `src/icons/modifier-*.svg` from codicon badges |
@@ -44,6 +44,7 @@ src/
   hexrays.py             re-tags Hex-Rays pseudocode (see "Pseudocode")
   chrome.py              Windows title bars, nav band arrows, faded disabled icons, list row icons
   color_gen.py           GENERATED (gitignored) colours for the plugin
+  icons_gen.py           GENERATED (gitignored) window icons by title, plugin icons
   css/                   theme CSS sources, bundled in src/styles.txt order
     widgets.css          Qt widgets
     highlight.css        syntax colours (listing, xrefs, output, script editor)
@@ -113,9 +114,21 @@ The generated definitions block goes first in `theme.css` (with
   `icons/swapped/<path>.svg` to `:/<path>.svg`. The latter come from the
   `swapped` section of `config-icons-ida.yaml`, keyed by resource path.
   Lookup tables are built lazily per screen scale: the scale is not known yet
-  when the plugin loads. Window icons (dock headers `DockWidgetTitle`, tabbed
-  docks `DockTabBar`, the Windows menu) are not swapped yet: setting icons or
-  painting over them by pixel match proved unreliable, since IDA re-applies them.
+  when the plugin loads.
+- Dock window icons are matched by window title instead (`_WindowIcons`):
+  the `windows` section of `config-icons-ida.yaml` maps titles (trailing `*`
+  = any suffix) to icon names, generated into `src/icons_gen.py`. They are
+  set on `IDADockWidget` (window icon), `DockTabBar` tabs (tabbed docks) and
+  painted over the icon label of `DockWidgetTitle` (header of a dock alone in
+  its area); the "Close" button of both `DockWidgetTitle` and `DockAreaDragTitle`
+  (header of an area of tabbed docks) gets `plugin/window-close.svg`; tab close
+  buttons get it from `QTabBar::close-button` in `icons_indicator.css`. IDA
+  re-applies its icons, so tab bars and buttons are fixed up on every paint.
+  The `plugin` section builds icons IDA has no name for into `icons/plugin/`;
+  `windows` values can name them as `plugin/<name>` (e.g. Pseudocode-A).
+  Entries in the Windows menu (a `QMenu` titled "Windows", entries named
+  after the window titles) are fixed up on its Show event, after IDA refills
+  it.
 
 ## Plugin
 
@@ -156,12 +169,16 @@ Things a style sheet cannot reach, handled in `chrome.py`:
   `::menu-button` width.
 - With a style sheet active, `QApplication.style()` is an unnamed
   `QStyleSheetStyle`; the real style is its only `QStyle` child.
+- In a paint event filter, don't look up the painted widget's siblings
+  (`findChildren` on its parent): it re-wraps the widget and PySide raised
+  "Internal C++ object already deleted" in IDA. Gather what painting needs
+  beforehand (the header icon label gets its title as a property in refresh).
 - Some widgets read `[os-dark-theme="true"]` variants; selectors include both.
 - Pin `pyside6-essentials` in pyproject.toml to IDA's bundled PySide6 when
   IDA is upgraded (`<IDA>/python/PySide6/__init__.py`).
 
 ## Generated, do not edit
 
-`dist/`, `src/color_gen.py`, `.cache/`. `src/icons.txt` and
+`dist/`, `src/*_gen.py`, `.cache/`. `src/icons.txt` and
 `src/icons/modifier-*.svg` are committed but produced by `dump-icons` and
 `extract-modifiers`; regenerate rather than hand-edit.

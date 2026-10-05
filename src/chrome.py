@@ -14,6 +14,9 @@ sheets:
   rows (Functions, Local Types, ...) get their icons from IDA's icon table or
   straight from its resources. They are recognised by their pixels and
   swapped for the theme's own icons.
+- dock window icons and close buttons: also from IDA's icon table. Windows are
+  recognised by their title instead (see the `windows` section of the icon
+  config), in their tab, header, title bar and Windows menu entry.
 """
 
 import ctypes
@@ -22,12 +25,13 @@ import os
 import re
 import sys
 
-from PySide6.QtCore import QObject, QSize, Qt, QTimer
+from PySide6.QtCore import QEvent, QObject, QSize, Qt, QTimer
 from PySide6.QtGui import QIcon, QImage, QPainter, QPixmap, QPixmapCache
 from PySide6.QtWidgets import (QAbstractButton, QAbstractItemView, QApplication, QHeaderView,
-                               QProxyStyle, QStyle, QStyledItemDelegate)
+                               QLabel, QMenu, QProxyStyle, QStyle, QStyledItemDelegate, QTabBar)
 
 from color_gen import TITLEBAR__BORDER, TITLEBAR__CAPTION, TITLEBAR__TEXT
+from icons_gen import WINDOW_CLOSE_ICON, WINDOW_ICONS
 
 DWMWA_USE_IMMERSIVE_DARK_MODE = 20
 DWMWA_BORDER_COLOR = 34
@@ -39,6 +43,14 @@ POLL_MS = 1000
 DISABLED_ICON_OPACITY = 0.35
 ORIGINAL_ICONS = ":/IDAG/resources/menu/"
 FINGERPRINT_SIZE = QSize(16, 16)
+DOCK_WINDOW_CLASS = "IDADockWidget"
+DOCK_TITLE_CLASS = "DockWidgetTitle"      # header of a dock window alone in its area
+DOCK_AREA_TITLE_CLASS = "DockAreaDragTitle"  # header of an area of tabbed dock windows
+DOCK_TAB_BAR_CLASS = "DockTabBar"         # tabs of dock windows sharing an area
+DOCK_CLOSE_BUTTON = "Close"               # tooltip of the header's close button
+WINDOWS_MENU = "Windows"                  # lists the open windows, with their icons
+WATCHED_PROPERTY = "catppuccinWindowIcons"
+TITLE_PROPERTY = "catppuccinWindowTitle"     # on header icon labels
 
 
 def _colorref(hex_color):
@@ -191,6 +203,128 @@ class _IconSwapDelegate(QStyledItemDelegate):
             setattr(option, "icon", replacement)
 
 
+class _WindowIcons(QObject):
+    """Dock window icons, by window title, wherever IDA shows them: the
+    window's own icon (title bar when floating), its header, its tab and its
+    Windows menu entry, plus the header's close button. IDA re-applies its
+    icons at will, so the headers and tab bars are watched and fixed up right
+    before they paint, and the Windows menu right before it shows."""
+
+    def __init__(self, theme_dir):
+        super().__init__()
+        icons_dir = os.path.join(theme_dir, "icons")
+        self.icons = [(title, is_prefix, QIcon(os.path.join(icons_dir, path)))
+                      for title, is_prefix, path in WINDOW_ICONS]
+        self.close_icon = QIcon(os.path.join(icons_dir, WINDOW_CLOSE_ICON))
+
+    def icon(self, title):
+        """The theme's icon for a dock window title, or None."""
+        title = title.strip()
+        for name, is_prefix, icon in self.icons:
+            if title == name or (is_prefix and title.startswith(name)):
+                return icon
+        return None
+
+    def refresh(self):
+        for w in QApplication.allWidgets():
+            kind = w.metaObject().className()
+            if kind == DOCK_WINDOW_CLASS:
+                _set_icon(self.icon(w.windowTitle()), w.windowIcon, w.setWindowIcon)
+            elif kind == DOCK_TAB_BAR_CLASS and isinstance(w, QTabBar):
+                self._watch(w)
+                self._fix_tabs(w)
+            elif kind == DOCK_TITLE_CLASS:
+                self._watch_title(w)
+                self._watch_close(w)
+            elif kind == DOCK_AREA_TITLE_CLASS:
+                self._watch_close(w)
+            elif isinstance(w, QMenu) and _menu_text(w.title()) == WINDOWS_MENU:
+                self._watch(w)
+
+    def _watch(self, widget):
+        if not widget.property(WATCHED_PROPERTY):
+            widget.setProperty(WATCHED_PROPERTY, True)
+            widget.installEventFilter(self)
+            widget.update()
+
+    def _watch_title(self, title):
+        labels = title.findChildren(QLabel)
+        text = next((label.text() for label in labels if label.text()), "")
+        for label in labels:
+            if not label.text():                 # the icon, next to the title label
+                # for _paint_label
+                if label.property(TITLE_PROPERTY) != text:
+                    label.setProperty(TITLE_PROPERTY, text)
+                    label.update()
+                self._watch(label)
+
+    def _watch_close(self, header):
+        for button in header.findChildren(QAbstractButton):
+            if button.toolTip() == DOCK_CLOSE_BUTTON or button.text() == DOCK_CLOSE_BUTTON:
+                self._watch(button)
+                _set_icon(self.close_icon, button.icon, button.setIcon)
+
+    def _fix_tabs(self, bar):
+        for i in range(bar.count()):
+            _set_icon(self.icon(bar.tabText(i)), lambda: bar.tabIcon(i),
+                      lambda icon: bar.setTabIcon(i, icon))
+
+    def _fix_menu(self, menu):
+        """The Windows menu's entries are named after the windows' titles."""
+        for action in menu.actions():
+            _set_icon(self.icon(_menu_text(action.text())), action.icon, action.setIcon)
+
+    def eventFilter(self, watched, event):
+        if event.type() == QEvent.Type.Show and isinstance(watched, QMenu):
+            try:
+                self._fix_menu(watched)          # IDA refills it on aboutToShow
+            except RuntimeError:
+                pass
+            return False
+        if event.type() != QEvent.Type.Paint:
+            return False
+        try:
+            if isinstance(watched, QTabBar):
+                self._fix_tabs(watched)
+            elif isinstance(watched, QAbstractButton):
+                _set_icon(self.close_icon, watched.icon, watched.setIcon)
+            elif isinstance(watched, QLabel):
+                return self._paint_label(watched)
+        except RuntimeError:                     # widget deleted under us: paint normally
+            pass
+        return False
+
+    def _paint_label(self, label):
+        """Paint the theme's icon in place of a header's icon label (IDA keeps
+        re-applying its own pixmap, so it is painted over rather than replaced)."""
+        pixmap = label.pixmap()
+        if pixmap.isNull():
+            return False
+        rect_args = (label.layoutDirection(), label.alignment(), label.contentsRect())
+        # Set by _watch_title. (Looking up the title label here, while the
+        # label paints, re-wraps it and PySide took it for deleted.)
+        icon = self.icon(str(label.property(TITLE_PROPERTY) or ""))
+        if icon is None:
+            return False                         # unknown window: paint normally
+        size = pixmap.deviceIndependentSize().toSize()
+        rect = QStyle.alignedRect(rect_args[0], rect_args[1], size, rect_args[2])
+        painter = QPainter(label)
+        painter.drawPixmap(rect.topLeft(), icon.pixmap(size, pixmap.devicePixelRatio()))
+        painter.end()
+        return True
+
+
+def _menu_text(text):
+    """A menu or action text without its & mnemonics and tab-separated shortcut."""
+    return text.split("\t")[0].replace("&&", "\0").replace("&", "").replace("\0", "&").strip()
+
+
+def _set_icon(icon, get, set_):
+    """set_(icon) unless it is already set (setting icons repaints)."""
+    if icon is not None and get().cacheKey() != icon.cacheKey():
+        set_(icon)
+
+
 class Chrome(QObject):
     def __init__(self, theme_dir):
         super().__init__()
@@ -203,6 +337,7 @@ class Chrome(QObject):
         self.dwm = ctypes.windll.dwmapi if sys.platform == "win32" else None
         self.style = _install_faded_disabled_icons()   # kept alive with the plugin
         self.icon_swap = _IconSwap(theme_dir)
+        self.window_icons = _WindowIcons(theme_dir)
 
         _app().focusChanged.connect(self.refresh)   # new dialogs take focus
         self.timer = QTimer(self)                # catches everything else
@@ -223,6 +358,7 @@ class Chrome(QObject):
                 self._style_title_bar(w)
         self._fix_nav_buttons()
         self.icon_swap.refresh()
+        self.window_icons.refresh()
 
     def _set_dwm(self, hwnd, attr, value):
         v = ctypes.c_int(value)
