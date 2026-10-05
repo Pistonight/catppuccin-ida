@@ -16,6 +16,12 @@ tasks:
     - task: build
     - uv run scripts/install.py
 
+  package:
+    - rm -rf dist
+    - rm -f catppuccin-ida.zip
+    - task: build
+    - cd dist && zip -r ../catppuccin-ida.zip .
+
   clean:
     - rm -rf dist
     - rm -rf .cache

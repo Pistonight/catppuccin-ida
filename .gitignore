@@ -4,5 +4,7 @@ __pycache__
 *_gen.py
 *_gen.css
 *.png
+*.zip
 node_modules
 .cache
+
