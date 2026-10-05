@@ -154,6 +154,17 @@ CustomIDAMemo[os-dark-theme="true"]
     qproperty-caret                       : ${ctp-r-highlight--listing--caret};         /* Caret                                         */
 }
 
+/* Local Types: the type printer tags differently from pseudocode. Struct
+ * names and member names share CNAME (code name), so both get the member
+ * colour; numbers in __attribute__((aligned(1))) are tagged LIBNAME. Base
+ * classes and member types are HIDNAME (types) and keep that colour. */
+type_listing_t,
+type_listing_t[os-dark-theme="true"]
+{
+    qproperty-line-fg-code-name           : ${ctp-r-highlight--type-listing--line-fg--code-name};    /* Struct and member names   */
+    qproperty-line-fg-libfunc             : ${ctp-r-highlight--type-listing--line-fg--libfunc};    /* Numbers in attributes      */
+}
+
 /* ------------------------------------------------------------------ *
  * Xref tree
  * ------------------------------------------------------------------ */

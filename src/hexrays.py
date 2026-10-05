@@ -37,6 +37,8 @@ import ida_nalt
 import ida_name
 import ida_typeinf
 
+from perf import perf
+
 ON = ida_lines.SCOLOR_ON
 OFF = ida_lines.SCOLOR_OFF
 ESC = ida_lines.SCOLOR_ESC
@@ -291,7 +293,8 @@ def retag_cfunc(cfunc):
 class _HexraysHooks(ida_hexrays.Hexrays_Hooks):
     def func_printed(self, cfunc):
         try:
-            retag_cfunc(cfunc)
+            with perf.measure("pseudocode: retag"):
+                retag_cfunc(cfunc)
         except Exception:
             traceback.print_exc()
         return 0

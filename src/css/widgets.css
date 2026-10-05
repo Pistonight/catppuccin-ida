@@ -10,6 +10,16 @@ QWidget
     color: ${ctp-r-widget--base--fg};
 }
 
+/* Dialogs are a level lighter than the window. Their children are included, or check boxes,
+ * group boxes etc. keep the window colour; widgets with a colour of their own
+ * (inputs, lists, buttons, ...) repeat their rule for QDialog descendants,
+ * which outranks this one by coming later. */
+QDialog,
+QDialog QWidget
+{
+    background-color: ${ctp-r-widget--dialog--bg};
+}
+
 QWidget[field_validity=false]
 {
     border-color: ${ctp-r-widget--base--invalid-border};
@@ -214,7 +224,8 @@ QMenuBar::item:selected
     background-color: ${ctp-r-widget--menubar--item-selected-bg};
 }
 
-QMenu
+QMenu,
+QDialog QMenu
 {
     background-color: ${ctp-r-widget--menu--bg};
     border: 1px solid ${ctp-r-widget--menu--border};
@@ -241,14 +252,17 @@ QMenu::separator
  * ------------------------------------------------------------------ */
 
 QTextEdit,
-QPlainTextEdit
+QPlainTextEdit,
+QDialog QTextEdit,
+QDialog QPlainTextEdit
 {
     background-color: ${ctp-r-widget--text-edit--bg};
     border: 1px solid ${ctp-r-widget--text-edit--border};
     border-radius: 2px;
 }
 
-QLineEdit
+QLineEdit,
+QDialog QLineEdit
 {
     background-color: ${ctp-r-widget--line-edit--bg};
     border: 1px solid ${ctp-r-widget--line-edit--border};
@@ -273,7 +287,8 @@ QLineEdit:disabled
 
 /* Styled like QLineEdit; the buttons sit inside the frame on the right
  * (arrow images are in icons_arrow.css). */
-QAbstractSpinBox
+QAbstractSpinBox,
+QDialog QAbstractSpinBox
 {
     background-color: ${ctp-r-widget--spinbox--bg};
     border: 1px solid ${ctp-r-widget--spinbox--border};
@@ -336,7 +351,8 @@ QToolBar
     border: none;
 }
 
-QPushButton
+QPushButton,
+QDialog QPushButton
 {
     background-color: ${ctp-r-widget--button--bg};
     border: 1px solid ${ctp-r-widget--button--border};
@@ -563,11 +579,29 @@ QTabBar QToolButton
     border: none;
 }
 
+/* Tab close buttons: with an image from the style sheet (icons_indicator.css),
+ * Qt no longer draws a hover state for them */
+QTabBar::close-button
+{
+    border-radius: 2px;
+}
+
+QTabBar::close-button:hover
+{
+    background-color: ${ctp-r-widget--tab--close-hover-bg};
+}
+
+QTabBar::close-button:pressed
+{
+    background-color: ${ctp-r-widget--tab--close-pressed-bg};
+}
+
 /* ------------------------------------------------------------------ *
  * Tables, lists and trees
  * ------------------------------------------------------------------ */
 
-QTableView
+QTableView,
+QDialog QTableView
 {
     border: 1px solid ${ctp-r-widget--item-view--table-border};
     background-color: ${ctp-r-widget--item-view--table-bg};
@@ -586,7 +620,9 @@ QTreeView
 }
 
 QListView,
-QTreeView
+QTreeView,
+QDialog QListView,
+QDialog QTreeView
 {
     background-color: ${ctp-r-widget--item-view--list-bg};
 }
@@ -633,7 +669,8 @@ QTableCornerButton::section
  * Scrollbars
  * ------------------------------------------------------------------ */
 
-QScrollBar
+QScrollBar,
+QDialog QScrollBar
 {
     background-color: ${ctp-r-widget--scrollbar--bg};
     width: 14px;

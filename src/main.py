@@ -14,6 +14,7 @@ import ida_kernwin
 
 from chrome import Chrome, theme_dir
 from hexrays import Retagger
+from perf import perf
 
 
 class _UiHooks(ida_kernwin.UI_Hooks):
@@ -44,15 +45,18 @@ class CatppuccinPlugin(ida_idaapi.plugin_t):
     ui_hooks: _UiHooks | None = None
 
     def init(self):
-        directory = theme_dir()
-        if directory is None:
-            return ida_idaapi.PLUGIN_SKIP
-        self.chrome = Chrome(directory)
-        self.retagger = Retagger()
-        self.retagger.start()
-        self.ui_hooks = _UiHooks(self.retagger)
-        self.ui_hooks.hook()
-        return ida_idaapi.PLUGIN_KEEP
+        with perf.measure("init: total", report=True):
+            directory = theme_dir()
+            if directory is None:
+                return ida_idaapi.PLUGIN_SKIP
+            perf.start()
+            self.chrome = Chrome(directory)
+            with perf.measure("init: pseudocode hooks", report=True):
+                self.retagger = Retagger()
+                self.retagger.start()
+            self.ui_hooks = _UiHooks(self.retagger)
+            self.ui_hooks.hook()
+            return ida_idaapi.PLUGIN_KEEP
 
     def run(self, arg):
         pass
@@ -64,6 +68,7 @@ class CatppuccinPlugin(ida_idaapi.plugin_t):
             self.retagger.stop()
         if self.chrome is not None:
             self.chrome.stop()
+        perf.stop()
 
 
 def PLUGIN_ENTRY():

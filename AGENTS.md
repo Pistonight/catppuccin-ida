@@ -43,6 +43,7 @@ src/
   main.py                plugin entry (PLUGIN_ENTRY); merges the parts below
   hexrays.py             re-tags Hex-Rays pseudocode (see "Pseudocode")
   chrome.py              Windows title bars, nav band arrows, faded disabled icons, list row icons
+  perf.py                timings printed to IDA's output (PERF_ENABLED)
   color_gen.py           GENERATED (gitignored) colours for the plugin
   icons_gen.py           GENERATED (gitignored) window icons by title, plugin icons
   css/                   theme CSS sources, bundled in src/styles.txt order
@@ -113,8 +114,9 @@ The generated definitions block goes first in `theme.css` (with
   `icons/menu/<Name>.svg` to `:/IDAG/resources/menu/<Name>.svg` and
   `icons/swapped/<path>.svg` to `:/<path>.svg`. The latter come from the
   `swapped` section of `config-icons-ida.yaml`, keyed by resource path.
-  Lookup tables are built lazily per screen scale: the scale is not known yet
-  when the plugin loads.
+  Lookup tables are built per screen scale (not known yet when the plugin
+  loads) from the 1 s refresh, in slices of at most `TABLE_SLICE_MS`: built
+  in one go it took ~260 ms and froze IDA (a white flash) on the first list.
 - Dock window icons are matched by window title instead (`_WindowIcons`):
   the `windows` section of `config-icons-ida.yaml` maps titles (trailing `*`
   = any suffix) to icon names, generated into `src/icons_gen.py`. They are

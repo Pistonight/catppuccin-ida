@@ -43,6 +43,8 @@ palette:
   base: '#1e1e2e'
   mantle: '#181825'
   crust: '#11111b'
+  # From Catppuccin Frappe: a base a step lighter than Mocha's, for background that wants to be lighter
+  frappe-base: '#303446'
 
 # Tints are also colours, defined as ctp-c-<tint_name>. Two kinds:
 #   amount: share of `color` blended onto `onto` (default c-base); opaque
@@ -63,6 +65,7 @@ tints:
   yellow-a25: { color: c-yellow, alpha: 0.25 }
   mauve-a25: { color: c-mauve, alpha: 0.25 }
   green-a25: { color: c-green, alpha: 0.25 }
+  green-a10: { color: c-green, alpha: 0.10 }
   sky-a25: { color: c-sky, alpha: 0.25 }
   peach-a25: { color: c-peach, alpha: 0.25 }
   pink-a25: { color: c-pink, alpha: 0.25 }
@@ -97,10 +100,13 @@ definitions:
   dim: c-overlay1  # auto comments, prefixes, xrefs
   faint: c-overlay0  # opcode bytes, hidden lines
 
-  # Window chrome
+  # Window chrome. Three levels of background: the output window (bg-raised)
+  # above code views and dialogs (view) above lists (list) and the window.
   bg: c-mantle  # window and widget background
+  bg-raised: c-frappe-base  # lighter background
   bg-deep: c-crust  # tooltips, shadows
-  view: c-base  # listings, tables, editors
+  view: c-base  # code views (disassembly, pseudocode, microcode), editors, inputs
+  list: c-mantle  # lists, tables and trees (Functions, Local Types, ...)
   surface: c-surface0  # tabs, combos, scrollbar track
   surface-hi: c-surface1  # selected tab, graph nodes
   handle: c-surface2  # scrollbar handle
@@ -111,7 +117,7 @@ definitions:
   fg-disabled: c-overlay0
   accent: c-blue  # hover / focus borders
   selection: c-surface1
-  highlight: c-yellow-a25  # search, same-name highlight
+  highlight: c-surface1  # search, same-name highlight
 
   # Status
   attention: c-yellow  # cursors, bookmarks, changed
@@ -197,7 +203,8 @@ roles:
 
     # Individual IDA dialogs
     dialog:
-      jump-anywhere-bg: d-bg
+      bg: c-base  # dialogs and everything in them without a colour of its own
+      jump-anywhere-bg: c-base
 
     # Dock widgets
     dock:
@@ -246,7 +253,7 @@ roles:
       pressed-border: c-lavender
       disabled-fg: d-fg-disabled
     toolbutton:
-      hover-bg: d-surface
+      hover-bg: d-surface-hi
       pressed-bg: d-surface-hi
       checked-bg: d-surface-hi
       checked-border: d-accent
@@ -280,15 +287,17 @@ roles:
       pane-border: d-border
       pane-bg: d-bg
       scroll-button-bg: d-bg
+      close-hover-bg: c-surface2  # shows on both selected (surface1) and plain tabs
+      close-pressed-bg: c-overlay0
 
     # Tables, lists and trees
     item-view:
       table-border: d-border
-      table-bg: d-view
-      table-alt-bg: d-bg
+      table-bg: d-list
+      table-alt-bg: c-base
       table-grid: d-border
       container-border: d-border
-      list-bg: d-view
+      list-bg: d-list
       selected-bg: d-selection
       selected-fg: d-fg
 
@@ -316,7 +325,7 @@ roles:
     # Output window and script text areas
     output:
       fg: d-fg
-      bg: d-view
+      bg: d-bg-raised
     text-area:
       # Output window / script text areas
       keyword1: d-keyword
@@ -397,6 +406,12 @@ roles:
         unsaved-changes: d-warning  # Unsaved changes
       caret: c-rosewater  # Caret
 
+    # Local Types (overrides the listing colours above for that view only)
+    type-listing:
+      line-fg:
+        code-name: d-variable  # struct and member names (one tag for both)
+        libfunc: d-constant  # numbers in __attribute__((aligned(1)))
+
     # Xref tree
     xref-tree:
       function-name: d-function
@@ -415,7 +430,7 @@ roles:
       code-reference: d-comment
       data-reference: d-dim
       prefix: d-dim
-      tree-bg: d-view
+      tree-bg: d-list
       search-match: d-highlight
       selected-bg: d-selection
       selected-fg: d-fg
@@ -436,6 +451,7 @@ roles:
         unexplored: c-peach  # Unexplored byte
         extern: c-pink  # External name definition segment
         current-line: d-warning  # Current line
+        current-item: d-dim  # Current item (IDA's default is transparent, drawn black in hints)
         hidden-line: d-faint  # Hidden line
         lumina: c-green  # Lumina
     text-arrows:
@@ -468,10 +484,14 @@ roles:
         trace: c-blue-a15
         trace-ovl: c-sapphire-a15
         bookmark: d-surface
+        extra-1: d-surface  # Extra overlay #1 (probably the synced views band)
       bookmark-star-outline: d-attention
     hints:
       line-bg:
         default: d-bg
+      line-fg:
+        default: c-teal  # untagged text, e.g. all of a decompiler hint
+      border: d-accent  # hover hint popups
 
     # Diff / merge regions
     diff:

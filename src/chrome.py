@@ -24,6 +24,7 @@ import hashlib
 import os
 import re
 import sys
+import time
 
 from PySide6.QtCore import QEvent, QObject, QSize, Qt, QTimer
 from PySide6.QtGui import QIcon, QImage, QPainter, QPixmap, QPixmapCache
@@ -32,6 +33,7 @@ from PySide6.QtWidgets import (QAbstractButton, QAbstractItemView, QApplication,
 
 from color_gen import TITLEBAR__BORDER, TITLEBAR__CAPTION, TITLEBAR__TEXT
 from icons_gen import WINDOW_CLOSE_ICON, WINDOW_ICONS
+from perf import perf
 
 DWMWA_USE_IMMERSIVE_DARK_MODE = 20
 DWMWA_BORDER_COLOR = 34
@@ -43,6 +45,7 @@ POLL_MS = 1000
 DISABLED_ICON_OPACITY = 0.35
 ORIGINAL_ICONS = ":/IDAG/resources/menu/"
 FINGERPRINT_SIZE = QSize(16, 16)
+TABLE_SLICE_MS = 8           # longest a slice of a lookup table build may block the UI
 DOCK_WINDOW_CLASS = "IDADockWidget"
 DOCK_TITLE_CLASS = "DockWidgetTitle"      # header of a dock window alone in its area
 DOCK_AREA_TITLE_CLASS = "DockAreaDragTitle"  # header of an area of tabbed dock windows
@@ -141,10 +144,13 @@ class _IconSwap:
                     path = os.path.join(dirpath, name)
                     resource = os.path.relpath(path, swapped_dir).replace(os.sep, "/")
                     self._add(":/" + resource, path)
-        # Fingerprints depend on the size and the screen scale, which may not be
-        # known yet at startup, so a table is built per (logical size, scale)
-        # when an image of that kind first needs looking up.
-        self.tables = {}             # (width, height, scale) -> {fingerprint: theme QIcon}
+        # Fingerprints depend on the screen scale, which may not be known yet at
+        # startup, so a table is built per scale, once refresh() or a row asks
+        # for it. Rendering every original takes a few hundred ms, so it is
+        # built in slices between events; rows drawn meanwhile keep IDA's icon
+        # and are repainted once it is done.
+        self.tables = {}             # scale -> {fingerprint: theme QIcon}
+        self.building = {}           # scale -> (partial table, remaining pairs, start)
         self.icon_cache = {}         # (QIcon.cacheKey(), scale) -> theme QIcon or None
 
     def _add(self, original_path, theme_path):
@@ -152,31 +158,49 @@ class _IconSwap:
         if not original.isNull():
             self.pairs.append((original, QIcon(theme_path)))
 
-    def _lookup(self, image, logical_size, scale):
-        """The theme icon whose original renders exactly as `image`, or None."""
-        kind = (logical_size.width(), logical_size.height(), scale)
-        table = self.tables.get(kind)
-        if table is None:
-            table = {}
-            for original, theme in self.pairs:
-                key = _fingerprint(original.pixmap(logical_size, scale).toImage())
+    def _build(self, scale):
+        """Start building the lookup table for `scale`, unless built or underway."""
+        if scale not in self.tables and scale not in self.building:
+            self.building[scale] = ({}, iter(self.pairs), time.perf_counter())
+            QTimer.singleShot(0, lambda: self._build_slice(scale))
+
+    def _build_slice(self, scale):
+        table, pairs, start = self.building[scale]
+        deadline = time.perf_counter() + TABLE_SLICE_MS / 1000
+        with perf.measure("list icons: table slice"):
+            for original, theme in pairs:
+                key = _fingerprint(original.pixmap(FINGERPRINT_SIZE, scale).toImage())
                 table.setdefault(key, theme)
-            self.tables[kind] = table
-        return table.get(_fingerprint(image))
+                if time.perf_counter() >= deadline:
+                    QTimer.singleShot(0, lambda: self._build_slice(scale))
+                    return
+        del self.building[scale]
+        self.tables[scale] = table
+        perf.note("list icons: table @%g built in %.0f ms (wall clock, in slices)"
+                  % (scale, (time.perf_counter() - start) * 1000))
+        for w in QApplication.allWidgets():  # rows drawn meanwhile showed IDA's icons
+            if isinstance(w, QAbstractItemView) and isinstance(w.itemDelegate(), _IconSwapDelegate):
+                w.viewport().update()
 
     def icon(self, icon):
-        """The theme's replacement for an original IDA icon, or None."""
+        """The theme's replacement for an original IDA icon, or None (also
+        while the lookup table is being built)."""
         if icon is None or icon.isNull():
             return None
         scale = _app().devicePixelRatio()
         key = (icon.cacheKey(), scale)
         if key not in self.icon_cache:
+            table = self.tables.get(scale)
+            if table is None:
+                self._build(scale)
+                return None
             image = icon.pixmap(FINGERPRINT_SIZE, scale).toImage()
-            self.icon_cache[key] = self._lookup(image, FINGERPRINT_SIZE, scale)
+            self.icon_cache[key] = table.get(_fingerprint(image))
         return self.icon_cache[key]
 
-    def refresh(self):
-        for w in QApplication.allWidgets():
+    def refresh(self, widgets):
+        self._build(_app().devicePixelRatio())   # usually ready before any list draws
+        for w in widgets:
             if isinstance(w, QAbstractItemView) and not isinstance(w, QHeaderView):
                 self._swap_delegate(w)
 
@@ -196,11 +220,12 @@ class _IconSwapDelegate(QStyledItemDelegate):
         self.swap = swap
 
     def initStyleOption(self, option, index):
-        super().initStyleOption(option, index)
-        # `icon` exists at runtime but is missing from PySide's type stubs
-        replacement = self.swap.icon(getattr(option, "icon"))
-        if replacement is not None:
-            setattr(option, "icon", replacement)
+        with perf.measure("list icons: row"):
+            super().initStyleOption(option, index)
+            # `icon` exists at runtime but is missing from PySide's type stubs
+            replacement = self.swap.icon(getattr(option, "icon"))
+            if replacement is not None:
+                setattr(option, "icon", replacement)
 
 
 class _WindowIcons(QObject):
@@ -225,8 +250,8 @@ class _WindowIcons(QObject):
                 return icon
         return None
 
-    def refresh(self):
-        for w in QApplication.allWidgets():
+    def refresh(self, widgets):
+        for w in widgets:
             kind = w.metaObject().className()
             if kind == DOCK_WINDOW_CLASS:
                 _set_icon(self.icon(w.windowTitle()), w.windowIcon, w.setWindowIcon)
@@ -277,12 +302,17 @@ class _WindowIcons(QObject):
     def eventFilter(self, watched, event):
         if event.type() == QEvent.Type.Show and isinstance(watched, QMenu):
             try:
-                self._fix_menu(watched)          # IDA refills it on aboutToShow
+                with perf.measure("window icons: menu"):
+                    self._fix_menu(watched)      # IDA refills it on aboutToShow
             except RuntimeError:
                 pass
             return False
         if event.type() != QEvent.Type.Paint:
             return False
+        with perf.measure("window icons: paint " + type(watched).__name__):
+            return self._paint_event(watched)
+
+    def _paint_event(self, watched):
         try:
             if isinstance(watched, QTabBar):
                 self._fix_tabs(watched)
@@ -335,15 +365,19 @@ class Chrome(QObject):
         }
         self.nav_buttons: list[QAbstractButton] = []
         self.dwm = ctypes.windll.dwmapi if sys.platform == "win32" else None
-        self.style = _install_faded_disabled_icons()   # kept alive with the plugin
-        self.icon_swap = _IconSwap(theme_dir)
-        self.window_icons = _WindowIcons(theme_dir)
+        with perf.measure("init: faded disabled icons (setStyle)", report=True):
+            self.style = _install_faded_disabled_icons()   # kept alive with the plugin
+        with perf.measure("init: list icons", report=True):
+            self.icon_swap = _IconSwap(theme_dir)
+        with perf.measure("init: window icons", report=True):
+            self.window_icons = _WindowIcons(theme_dir)
 
         _app().focusChanged.connect(self.refresh)   # new dialogs take focus
         self.timer = QTimer(self)                # catches everything else
         self.timer.timeout.connect(self.refresh)
         self.timer.start(POLL_MS)
-        self.refresh()
+        with perf.measure("init: first refresh", report=True):
+            self.refresh()
 
     def stop(self):
         self.timer.stop()
@@ -353,12 +387,19 @@ class Chrome(QObject):
             pass
 
     def refresh(self, *_):
-        for w in QApplication.topLevelWidgets():
-            if w.isVisible():
-                self._style_title_bar(w)
-        self._fix_nav_buttons()
-        self.icon_swap.refresh()
-        self.window_icons.refresh()
+        with perf.measure("refresh"):
+            with perf.measure("refresh: title bars"):
+                for w in QApplication.topLevelWidgets():
+                    if w.isVisible():
+                        self._style_title_bar(w)
+            with perf.measure("refresh: nav buttons"):
+                self._fix_nav_buttons()
+            with perf.measure("refresh: all widgets"):
+                widgets = QApplication.allWidgets()
+            with perf.measure("refresh: list icons"):
+                self.icon_swap.refresh(widgets)
+            with perf.measure("refresh: window icons"):
+                self.window_icons.refresh(widgets)
 
     def _set_dwm(self, hwnd, attr, value):
         v = ctypes.c_int(value)

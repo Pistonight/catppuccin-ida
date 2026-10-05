@@ -19,6 +19,7 @@ CustomIDAMemo[os-dark-theme="true"]
     qproperty-line-pfx-unexplored         : ${ctp-r-ida-view--gutter--line-pfx--unexplored}; /* Unexplored byte                               */
     qproperty-line-pfx-extern             : ${ctp-r-ida-view--gutter--line-pfx--extern};     /* External name definition segment              */
     qproperty-line-pfx-current-line       : ${ctp-r-ida-view--gutter--line-pfx--current-line};        /* Current line                                  */
+    qproperty-line-pfx-current-item       : ${ctp-r-ida-view--gutter--line-pfx--current-item};        /* Current item (IDA: transparent, black in hints) */
     qproperty-line-pfx-hidden-line        : ${ctp-r-ida-view--gutter--line-pfx--hidden-line};        /* Hidden line                                   */
     qproperty-line-pfx-lumina             : ${ctp-r-ida-view--gutter--line-pfx--lumina};     /* Lumina                                        */
 }
@@ -59,12 +60,22 @@ CustomIDAMemo[os-dark-theme="true"]
     qproperty-line-bgovl-trace            : ${ctp-r-ida-view--background--line-bgovl--trace};
     qproperty-line-bgovl-trace-ovl        : ${ctp-r-ida-view--background--line-bgovl--trace-ovl};
     qproperty-line-bgovl-bookmark         : ${ctp-r-ida-view--background--line-bgovl--bookmark};
+    qproperty-line-bgovl-extra-1          : ${ctp-r-ida-view--background--line-bgovl--extra-1};       /* Extra overlay #1 (synced views band?)        */
     qproperty-bookmark-star-outline       : ${ctp-r-ida-view--background--bookmark-star-outline};
 }
 
 CustomIDAMemo[hints="true"]
 {
     qproperty-line-bg-default             : ${ctp-r-ida-view--hints--line-bg--default};
+    qproperty-line-fg-default             : ${ctp-r-ida-view--hints--line-fg--default};    /* Untagged text (e.g. decompiler hints) */
+}
+
+/* Hover hint popups (pseudocode, Local Types, disassembly): a listing in a
+ * frameless window, lost against the views behind it without a border */
+hintview_t,
+hintview_t[os-dark-theme="true"]
+{
+    border: 1px solid ${ctp-r-ida-view--hints--border};
 }
 
 /* ------------------------------------------------------------------ *
