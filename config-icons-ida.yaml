@@ -624,7 +624,12 @@ windows:
 plugin:
   # Close button in dock window headers and tabs (also QTabBar::close-button)
   window-close:
-    base: [close, c-overlay2]
+    base: [close, c-subtext0]
+  # Fullscreen and Float buttons in dock window headers
+  window-fullscreen:
+    base: [screen-full, c-subtext0]
+  window-float:
+    base: [multiple-windows, c-subtext0]
   # Decompiler windows (IDA's icons for these are unnamed)
   window-pseudocode:
     base: [code, c-mauve]

@@ -122,8 +122,9 @@ The generated definitions block goes first in `theme.css` (with
   = any suffix) to icon names, generated into `src/icons_gen.py`. They are
   set on `IDADockWidget` (window icon), `DockTabBar` tabs (tabbed docks) and
   painted over the icon label of `DockWidgetTitle` (header of a dock alone in
-  its area); the "Close" button of both `DockWidgetTitle` and `DockAreaDragTitle`
-  (header of an area of tabbed docks) gets `plugin/window-close.svg`; tab close
+  its area); the Close / Fullscreen / Float buttons of both `DockWidgetTitle`
+  and `DockAreaDragTitle` (header of an area of tabbed docks), matched by
+  tooltip (`DOCK_BUTTON_ICONS`), get `plugin/window-*.svg`; tab close
   buttons get it from `QTabBar::close-button` in `icons_indicator.css`. IDA
   re-applies its icons, so tab bars and buttons are fixed up on every paint.
   The `plugin` section builds icons IDA has no name for into `icons/plugin/`;

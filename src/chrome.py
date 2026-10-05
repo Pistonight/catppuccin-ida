@@ -14,7 +14,7 @@ sheets:
   rows (Functions, Local Types, ...) get their icons from IDA's icon table or
   straight from its resources. They are recognised by their pixels and
   swapped for the theme's own icons.
-- dock window icons and close buttons: also from IDA's icon table. Windows are
+- dock window icons and header buttons: also from IDA's icon table. Windows are
   recognised by their title instead (see the `windows` section of the icon
   config), in their tab, header, title bar and Windows menu entry.
 """
@@ -32,7 +32,7 @@ from PySide6.QtWidgets import (QAbstractButton, QAbstractItemView, QApplication,
                                QLabel, QMenu, QProxyStyle, QStyle, QStyledItemDelegate, QTabBar)
 
 from color_gen import TITLEBAR__BORDER, TITLEBAR__CAPTION, TITLEBAR__TEXT
-from icons_gen import WINDOW_CLOSE_ICON, WINDOW_ICONS
+from icons_gen import WINDOW_CLOSE_ICON, WINDOW_FLOAT_ICON, WINDOW_FULLSCREEN_ICON, WINDOW_ICONS
 from perf import perf
 
 DWMWA_USE_IMMERSIVE_DARK_MODE = 20
@@ -50,7 +50,12 @@ DOCK_WINDOW_CLASS = "IDADockWidget"
 DOCK_TITLE_CLASS = "DockWidgetTitle"      # header of a dock window alone in its area
 DOCK_AREA_TITLE_CLASS = "DockAreaDragTitle"  # header of an area of tabbed dock windows
 DOCK_TAB_BAR_CLASS = "DockTabBar"         # tabs of dock windows sharing an area
-DOCK_CLOSE_BUTTON = "Close"               # tooltip of the header's close button
+# Header buttons, by tooltip -> theme icon (relative to icons/)
+DOCK_BUTTON_ICONS = {
+    "Close": WINDOW_CLOSE_ICON,
+    "Fullscreen": WINDOW_FULLSCREEN_ICON,
+    "Float": WINDOW_FLOAT_ICON,
+}
 WINDOWS_MENU = "Windows"                  # lists the open windows, with their icons
 WATCHED_PROPERTY = "catppuccinWindowIcons"
 TITLE_PROPERTY = "catppuccinWindowTitle"     # on header icon labels
@@ -231,7 +236,7 @@ class _IconSwapDelegate(QStyledItemDelegate):
 class _WindowIcons(QObject):
     """Dock window icons, by window title, wherever IDA shows them: the
     window's own icon (title bar when floating), its header, its tab and its
-    Windows menu entry, plus the header's close button. IDA re-applies its
+    Windows menu entry, plus the header's buttons. IDA re-applies its
     icons at will, so the headers and tab bars are watched and fixed up right
     before they paint, and the Windows menu right before it shows."""
 
@@ -240,7 +245,8 @@ class _WindowIcons(QObject):
         icons_dir = os.path.join(theme_dir, "icons")
         self.icons = [(title, is_prefix, QIcon(os.path.join(icons_dir, path)))
                       for title, is_prefix, path in WINDOW_ICONS]
-        self.close_icon = QIcon(os.path.join(icons_dir, WINDOW_CLOSE_ICON))
+        self.button_icons = {tip: QIcon(os.path.join(icons_dir, path))
+                             for tip, path in DOCK_BUTTON_ICONS.items()}
 
     def icon(self, title):
         """The theme's icon for a dock window title, or None."""
@@ -260,9 +266,9 @@ class _WindowIcons(QObject):
                 self._fix_tabs(w)
             elif kind == DOCK_TITLE_CLASS:
                 self._watch_title(w)
-                self._watch_close(w)
+                self._watch_buttons(w)
             elif kind == DOCK_AREA_TITLE_CLASS:
-                self._watch_close(w)
+                self._watch_buttons(w)
             elif isinstance(w, QMenu) and _menu_text(w.title()) == WINDOWS_MENU:
                 self._watch(w)
 
@@ -283,11 +289,13 @@ class _WindowIcons(QObject):
                     label.update()
                 self._watch(label)
 
-    def _watch_close(self, header):
+    def _watch_buttons(self, header):
+        """The header's Close / Fullscreen / Float buttons."""
         for button in header.findChildren(QAbstractButton):
-            if button.toolTip() == DOCK_CLOSE_BUTTON or button.text() == DOCK_CLOSE_BUTTON:
+            icon = self.button_icons.get(button.toolTip())
+            if icon is not None:
                 self._watch(button)
-                _set_icon(self.close_icon, button.icon, button.setIcon)
+                _set_icon(icon, button.icon, button.setIcon)
 
     def _fix_tabs(self, bar):
         for i in range(bar.count()):
@@ -317,7 +325,7 @@ class _WindowIcons(QObject):
             if isinstance(watched, QTabBar):
                 self._fix_tabs(watched)
             elif isinstance(watched, QAbstractButton):
-                _set_icon(self.close_icon, watched.icon, watched.setIcon)
+                _set_icon(self.button_icons.get(watched.toolTip()), watched.icon, watched.setIcon)
             elif isinstance(watched, QLabel):
                 return self._paint_label(watched)
         except RuntimeError:                     # widget deleted under us: paint normally
