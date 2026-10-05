@@ -7,6 +7,9 @@ sheets:
   can only ask for the dark title bar.
 - the nav band scroll buttons: IDA sets their (black) icon in code after the
   theme is applied, so we replace it at runtime.
+- disabled icons: Qt generates them by remapping the icon to greys around the
+  window colour, which leaves light icons light on a dark theme. A proxy style
+  draws them as the normal icon, faded, instead.
 """
 
 import ctypes
@@ -14,9 +17,9 @@ import os
 import re
 import sys
 
-from PySide6.QtCore import QObject, QTimer
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QAbstractButton, QApplication
+from PySide6.QtCore import QObject, Qt, QTimer
+from PySide6.QtGui import QIcon, QPainter, QPixmap, QPixmapCache
+from PySide6.QtWidgets import QAbstractButton, QApplication, QProxyStyle, QStyle
 
 from color_gen import TITLEBAR__BORDER, TITLEBAR__CAPTION, TITLEBAR__TEXT
 
@@ -27,6 +30,7 @@ DWMWA_TEXT_COLOR = 36
 
 THEME_DIR_RE = re.compile(r'url\("([^"]*/themes/catppuccin)/icons/')
 POLL_MS = 1000
+DISABLED_ICON_OPACITY = 0.35
 
 
 def _colorref(hex_color):
@@ -46,6 +50,46 @@ def theme_dir():
     return m.group(1) if m else None
 
 
+class _FadedDisabledIcons(QProxyStyle):
+    """The application's style, except disabled icons are the normal icon at
+    DISABLED_ICON_OPACITY."""
+
+    def generatedIconPixmap(self, iconMode, pixmap, opt):
+        if iconMode != QIcon.Mode.Disabled:
+            return super().generatedIconPixmap(iconMode, pixmap, opt)
+        faded = QPixmap(pixmap.size())
+        faded.setDevicePixelRatio(pixmap.devicePixelRatio())
+        faded.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(faded)
+        painter.setOpacity(DISABLED_ICON_OPACITY)
+        painter.drawPixmap(0, 0, pixmap)
+        painter.end()
+        return faded
+
+
+def _install_faded_disabled_icons():
+    """Put _FadedDisabledIcons on top of the application's existing style,
+    whatever it is (IDA's own proxy style, a user's choice, ...); returns the
+    new style, or None if the style chain looks unexpected."""
+    current = _app().style()
+    base = current
+    if current.metaObject().className() == "QStyleSheetStyle":
+        # With a style sheet (the theme), Qt wraps the real style in an
+        # internal QStyleSheetStyle; the real style is its only QStyle child.
+        inner = [c for c in current.children() if isinstance(c, QStyle)]
+        if len(inner) != 1:
+            print("catppuccin: disabled icons left unchanged; QStyleSheetStyle wraps %d styles"
+                  % len(inner))
+            return None
+        base = inner[0]
+    # QProxyStyle takes ownership of `base`, so it survives Qt deleting the old
+    # QStyleSheetStyle; setStyle() then wraps us in a new one for the style sheet.
+    faded = _FadedDisabledIcons(base)
+    _app().setStyle(faded)
+    QPixmapCache.clear()      # drop disabled icons already drawn the old way
+    return faded
+
+
 class Chrome(QObject):
     def __init__(self, theme_dir):
         super().__init__()
@@ -56,6 +100,7 @@ class Chrome(QObject):
         }
         self.nav_buttons: list[QAbstractButton] = []
         self.dwm = ctypes.windll.dwmapi if sys.platform == "win32" else None
+        self.style = _install_faded_disabled_icons()   # kept alive with the plugin
 
         _app().focusChanged.connect(self.refresh)   # new dialogs take focus
         self.timer = QTimer(self)                # catches everything else

@@ -230,6 +230,11 @@ roles:
       pressed-bg: d-surface-hi
       pressed-border: c-lavender
       disabled-fg: d-fg-disabled
+    toolbutton:
+      hover-bg: d-surface
+      pressed-bg: d-surface-hi
+      checked-bg: d-surface-hi
+      checked-border: d-accent
 
     # Combo boxes
     combobox:

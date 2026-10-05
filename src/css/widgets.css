@@ -332,6 +332,39 @@ CLIWidget > QGroupBox
     margin-top: 0;
 }
 
+/* Toolbar icon buttons: replace the native (light blue) hover/pressed/checked
+ * boxes. The transparent border keeps the size the same in every state. */
+QToolButton
+{
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 3px;
+}
+
+QToolButton:hover
+{
+    background-color: ${ctp-r-widget--toolbutton--hover-bg};
+}
+
+QToolButton:pressed
+{
+    background-color: ${ctp-r-widget--toolbutton--pressed-bg};
+}
+
+QToolButton:checked
+{
+    background-color: ${ctp-r-widget--toolbutton--checked-bg};
+    border: 1px solid ${ctp-r-widget--toolbutton--checked-border};
+}
+
+/* Buttons with a separate menu part (e.g. Back/Forward): once QToolButton is
+ * styled, Qt no longer reserves room for it, so the arrow would overlap the
+ * icon. The padding matches the menu-button width. */
+QToolButton[popupMode="1"]
+{
+    padding-right: 12px;
+}
+
 QToolButton::menu-button
 {
     border: none;

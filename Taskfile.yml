@@ -2,6 +2,7 @@ version: '3'
 
 tasks:
   setup:
+    - pnpm i
     - uv sync
     - uv run scripts/link-ida.py
 
@@ -14,3 +15,9 @@ tasks:
   install:
     - task: build
     - uv run scripts/install.py
+
+  clean:
+    - rm -rf dist
+    - rm -rf .cache
+    - rm -rf .venv
+    - pnpm clean
