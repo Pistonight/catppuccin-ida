@@ -1,0 +1,551 @@
+# IDA toolbar/menu icons, rebuilt from codicons (@vscode/codicons).
+#
+# Each icon is a codicon `base` in a colour, optionally layered with a
+# `modifier` badge in the bottom-right corner (src/icons/modifier-<name>.svg,
+# extracted by scripts/extract-modifiers.py). Colours refer to config.yaml
+# (c- colours or d- definitions).
+
+# Modifiers always use the same colour
+modifiers:
+  add: c-green  # add, create
+  delete: c-red  # delete
+  remove: c-peach  # shrink, change sign
+  check: c-green  # toggles
+  edit: c-peach  # edit
+  warning: c-yellow  # conflicts
+  sync: c-sky  # change
+  down: c-sapphire  # save / export / search next
+  up: c-sapphire  # load / import
+
+# Functions
+Function:
+  base: [symbol-method, c-yellow]
+MakeFunction:
+  base: [symbol-method, c-yellow]
+  modifier: add
+EditFunction:
+  base: [symbol-method, c-yellow]
+  modifier: edit
+FuncChangeCC:
+  base: [symbol-method, c-yellow]
+  modifier: sync
+OpenFunctions:
+  base: [symbol-method-arrow, c-yellow]
+TilAddFuncArg:
+  base: [symbol-parameter, c-blue]
+  modifier: add
+EditArgloc:
+  base: [symbol-parameter, c-blue]
+  modifier: edit
+
+# Types, structures, enums, constants
+OpenLocalTypes:
+  base: [symbol-class, c-blue]
+SetType:
+  base: [symbol-class, c-blue]
+  modifier: edit
+TilAddType:
+  base: [symbol-class, c-blue]
+  modifier: add
+TilDelType:
+  base: [symbol-class, c-blue]
+  modifier: delete
+LocalTypesExportToHeader:
+  base: [symbol-class, c-blue]
+  modifier: down
+OpenTypeLibraries:
+  base: [library, c-blue]
+CreateStructFromData:
+  base: [symbol-structure, c-blue]
+  modifier: add
+ShrinkStruct:
+  base: [symbol-structure, c-blue]
+  modifier: remove
+DeclareStructVar:
+  base: [symbol-structure, c-lavender]
+CopyStruct:
+  base: [copy, c-blue]
+EditFullTypeCopy:
+  base: [copy, c-lavender]
+AddEnum:
+  base: [symbol-enum, c-blue]
+  modifier: add
+DelEnum:
+  base: [symbol-enum, c-blue]
+  modifier: delete
+EditEnum:
+  base: [symbol-enum, c-blue]
+  modifier: edit
+AddConst:
+  base: [symbol-constant, c-peach]
+  modifier: add
+DelConst:
+  base: [symbol-constant, c-peach]
+  modifier: delete
+TilEditConst:
+  base: [symbol-constant, c-peach]
+  modifier: edit
+
+# Defining code and data
+MakeCode:
+  base: [code, c-mauve]
+MakeData:
+  base: [symbol-field, c-peach]
+MakeArray:
+  base: [symbol-array, c-peach]
+MakeStrlit:
+  base: [symbol-string, c-green]
+  modifier: add
+MakeUnknown:
+  base: [eraser, c-overlay2]
+MakeName:
+  base: [rename, c-lavender]
+ManualOperand:
+  base: [edit, c-text]
+
+# Comments and extra lines
+MakeComment:
+  base: [comment, c-overlay2]
+MakeRptCmt:
+  base: [comment-discussion, c-overlay2]
+MakeExtraLineA:
+  base: [keyboard-tab-above, c-overlay2]
+MakeExtraLineB:
+  base: [keyboard-tab-below, c-overlay2]
+
+# Operand formats
+OpNumber:
+  base: [symbol-numeric, c-peach]
+OpHex:
+  base: [symbol-numeric, c-maroon]
+OpDecimal:
+  base: [symbol-numeric, c-flamingo]
+OpOctal:
+  base: [symbol-numeric, c-rosewater]
+OpBinary:
+  base: [file-binary, c-peach]
+OpFloat:
+  base: [symbol-ruler, c-peach]
+OpChar:
+  base: [case-sensitive, c-green]
+OpEnum:
+  base: [symbol-enum-member, c-blue]
+OpOffset:
+  base: [link, c-sapphire]
+OpOffsetCs:
+  base: [link-external, c-sapphire]
+OpAnyOffset:
+  base: [references, c-sapphire]
+OpUserOffset:
+  base: [link, c-sapphire]
+  modifier: edit
+OpStructOffset:
+  base: [symbol-structure, c-sapphire]
+OpSegment:
+  base: [symbol-namespace, c-sapphire]
+OpStackVariable:
+  base: [symbol-variable, c-lavender]
+BitwiseNegate:
+  base: [symbol-operator, c-peach]
+ChangeSign:
+  base: [symbol-numeric, c-peach]
+  modifier: remove
+ToggleLeadingZeroes:
+  base: [index-zero, c-overlay2]
+  modifier: check
+
+# String literal types
+StringC:
+  base: [quote, c-green]
+StringDOS:
+  base: [terminal-cmd, c-green]
+StringDelphi:
+  base: [quotes, c-green]
+StringPascal1:
+  base: [quotes, c-teal]
+StringPascal2:
+  base: [quotes, c-sky]
+StringUnicode:
+  base: [text-size, c-green]
+StringUnicodePascal2:
+  base: [text-size, c-teal]
+StringUnicodePascal4:
+  base: [text-size, c-sky]
+
+# Navigation
+JumpEnter:
+  base: [arrow-small-right, c-sky]
+JumpEnterNew:
+  base: [link-external, c-sky]
+JumpNewDump:
+  base: [file-binary, c-sky]
+  modifier: add
+JumpToIP:
+  base: [target, c-sky]
+Return:
+  base: [arrow-left, c-sky]
+UndoReturn:
+  base: [arrow-right, c-sky]
+AddressDetails:
+  base: [info, c-sky]
+Bookmarks:
+  base: [bookmark, c-yellow]
+
+# Search (down = next)
+AskBinaryText:
+  base: [file-binary, c-sapphire]
+JumpBinaryText:
+  base: [file-binary, c-sapphire]
+  modifier: down
+JumpImmediate:
+  base: [symbol-numeric, c-sapphire]
+AskNextImmediate:
+  base: [symbol-numeric, c-sapphire]
+  modifier: down
+JumpText:
+  base: [whole-word, c-sapphire]
+AskNextText:
+  base: [whole-word, c-sapphire]
+  modifier: down
+SearchNext:
+  base: [search, c-sapphire]
+  modifier: down
+SetDirection:
+  base: [arrow-both, c-sapphire]
+ActinsQuickFilter:
+  base: [filter, c-sapphire]
+
+# Views and windows
+OpenExports:
+  base: [export, c-lavender]
+OpenImports:
+  base: [desktop-download, c-lavender]
+OpenNames:
+  base: [tag, c-lavender]
+OpenStrings:
+  base: [symbol-string, c-green]
+OpenSegments:
+  base: [layers, c-sapphire]
+OpenSegmentRegisters:
+  base: [symbol-namespace, c-sapphire]
+OpenSelectors:
+  base: [list-selection, c-sapphire]
+OpenSignatures:
+  base: [library, c-mauve]
+OpenStackVariables:
+  base: [debug-stackframe, c-lavender]
+Locals:
+  base: [symbol-variable, c-lavender]
+OpenXrefs:
+  base: [references, c-teal]
+OpenXrefsTree:
+  base: [list-tree, c-teal]
+OpenNotepad:
+  base: [note, c-text]
+OpenProblems:
+  base: [warning, c-yellow]
+OutputWindow:
+  base: [output, c-text]
+WindowOpen:
+  base: [multiple-windows, c-text]
+WindowsList:
+  base: [list-unordered, c-text]
+Modules:
+  base: [package, c-blue]
+PatchedBytes:
+  base: [diff-modified, c-maroon]
+SwitchToSource:
+  base: [file-code, c-text]
+ToggleDump:
+  base: [file-binary, c-text]
+  modifier: check
+ToggleSourceDebug:
+  base: [file-code, c-text]
+  modifier: check
+
+# Showing and hiding
+Hide:
+  base: [eye-closed, c-subtext0]
+HideAll:
+  base: [collapse-all, c-subtext0]
+UnHide:
+  base: [eye, c-subtext0]
+UnHideAll:
+  base: [expand-all, c-subtext0]
+DelHiddenRange:
+  base: [eye-closed, c-subtext0]
+  modifier: delete
+ShowFlags:
+  base: [flag, c-text]
+TwoFlags:
+  base: [flag, c-text]
+  modifier: add
+
+# Files, databases, desktops (down = save/export, up = load)
+LoadFile:
+  base: [file, c-text]
+  modifier: up
+LoadNewFile:
+  base: [folder-opened, c-text]
+LoadSigFile:
+  base: [library, c-mauve]
+  modifier: up
+SaveBase:
+  base: [save, c-blue]
+SaveBaseSnap:
+  base: [save-all, c-blue]
+TakeSnapshot:
+  base: [device-camera, c-blue]
+ShowSnapMan:
+  base: [versions, c-blue]
+DumpDatabase:
+  base: [database, c-blue]
+  modifier: down
+DumpTypes:
+  base: [file-code, c-blue]
+  modifier: down
+ProduceAsm:
+  base: [file-code, c-text]
+  modifier: down
+ProduceHeader:
+  base: [symbol-file, c-text]
+  modifier: down
+ProduceInc:
+  base: [file-text, c-text]
+  modifier: down
+ProduceLst:
+  base: [list-ordered, c-text]
+  modifier: down
+LoadDesktop:
+  base: [layout, c-text]
+  modifier: up
+SaveDesktop:
+  base: [layout, c-text]
+  modifier: down
+DeleteDesktop:
+  base: [layout, c-text]
+  modifier: delete
+
+# Scripts, settings, help
+Execute:
+  base: [play, c-green]
+ExecuteLine:
+  base: [debug-console, c-green]
+RecentScripts:
+  base: [history, c-text]
+Calculate:
+  base: [percentage, c-teal]
+Options:
+  base: [settings-gear, c-text]
+ShortcutEditor:
+  base: [record-keys, c-text]
+ShowHelp:
+  base: [question, c-sky]
+ShowUndoHistory:
+  base: [discard, c-text]
+EditCopy:
+  base: [copy, c-text]
+Analysis:
+  base: [beaker, c-teal]
+Waiting:
+  base: [loading, c-text]
+QuitIDA:
+  base: [sign-out, c-red]
+
+# Graphs and charts
+GraphGraphView:
+  base: [type-hierarchy, c-teal]
+GraphFlatView:
+  base: [list-flat, c-teal]
+GraphFunc:
+  base: [type-hierarchy-sub, c-teal]
+FunctionCallGraph:
+  base: [type-hierarchy-super, c-teal]
+CallFlow:
+  base: [references, c-teal]
+ChartXrefsFrom:
+  base: [call-outgoing, c-teal]
+ChartXrefsTo:
+  base: [call-incoming, c-teal]
+ChartXrefsUser:
+  base: [graph-line, c-teal]
+  modifier: edit
+GraphOverview:
+  base: [map, c-teal]
+GraphLayout:
+  base: [editor-layout, c-teal]
+GraphOrthogonalLayout:
+  base: [table, c-teal]
+GraphGroup:
+  base: [group-by-ref-type, c-teal]
+GraphUngroup:
+  base: [ungroup-by-ref-type, c-teal]
+GraphColor:
+  base: [paintcan, c-teal]
+GraphSetupColors:
+  base: [symbol-color, c-teal]
+GraphSetupOptions:
+  base: [settings-gear, c-teal]
+GraphPrint:
+  base: [file-pdf, c-teal]
+GraphZoom100:
+  base: [screen-normal, c-teal]
+GraphZoomFit:
+  base: [screen-full, c-teal]
+
+# Proximity browser
+GraphProximityView:
+  base: [telescope, c-teal]
+GraphNewProximityView:
+  base: [telescope, c-teal]
+  modifier: add
+GraphProximityAddGraph:
+  base: [type-hierarchy, c-teal]
+  modifier: add
+GraphProximityAddNode:
+  base: [circle-large, c-teal]
+  modifier: add
+GraphProximityAddNodeByAddr:
+  base: [location, c-teal]
+  modifier: add
+GraphProximityAddParents:
+  base: [type-hierarchy-super, c-teal]
+  modifier: add
+GraphProximityDelChilds:
+  base: [type-hierarchy-sub, c-teal]
+  modifier: delete
+GraphProximityDelNode:
+  base: [circle-large, c-teal]
+  modifier: delete
+GraphProximityDelParents:
+  base: [type-hierarchy-super, c-teal]
+  modifier: delete
+GraphProximityFindPath:
+  base: [compass, c-teal]
+
+# Breakpoints
+Breakpoints:
+  base: [activate-breakpoints, c-red]
+BreakpointAdd:
+  base: [circle-filled, c-red]
+  modifier: add
+BreakpointDel:
+  base: [circle-filled, c-red]
+  modifier: delete
+BreakpointEdit:
+  base: [circle-filled, c-red]
+  modifier: edit
+BreakpointEnable:
+  base: [circle-filled, c-red]
+  modifier: check
+BreakpointDisable:
+  base: [circle-slash, c-red]
+
+# Debugger: process (run green, pause yellow, stop red, backwards mauve)
+Debugger:
+  base: [debug-alt, c-green]
+ProcessStart:
+  base: [debug-start, c-green]
+ProcessPause:
+  base: [debug-pause, c-yellow]
+ProcessExit:
+  base: [debug-stop, c-red]
+ProcessGoBackwards:
+  base: [debug-reverse-continue, c-mauve]
+
+# Debugger: stepping (forwards blue, backwards mauve)
+ThreadStepInto:
+  base: [debug-step-into, c-blue]
+ThreadStepIntoBackwards:
+  base: [debug-step-into, c-mauve]
+ThreadStepOver:
+  base: [debug-step-over, c-blue]
+ThreadStepOverBackwards:
+  base: [debug-step-back, c-mauve]
+ThreadRunUntilReturn:
+  base: [debug-step-out, c-blue]
+ThreadRunToCursor:
+  base: [cursor, c-blue]
+ThreadRunToCursorBackwards:
+  base: [cursor, c-mauve]
+ThreadSetCurrentIp:
+  base: [target, c-blue]
+  modifier: edit
+
+# Debugger: windows and threads
+Threads:
+  base: [server-process, c-flamingo]
+DebuggerSuspendThread:
+  base: [debug-pause, c-flamingo]
+DebuggerResumeThread:
+  base: [debug-continue, c-flamingo]
+StackTrace:
+  base: [debug-stackframe, c-flamingo]
+StackView:
+  base: [layers-active, c-flamingo]
+ShowRegisters:
+  base: [chip, c-red]
+WatchList:
+  base: [eye, c-sky]
+WatchView:
+  base: [preview, c-sky]
+AddWatch:
+  base: [eye, c-sky]
+  modifier: add
+DelWatch:
+  base: [eye, c-sky]
+  modifier: delete
+
+# Tracing
+TracingWindow:
+  base: [pulse, c-pink]
+ExecTraceAdd:
+  base: [debug-line-by-line, c-pink]
+  modifier: add
+ReadWriteTraceAdd:
+  base: [arrow-swap, c-pink]
+  modifier: add
+WriteTraceAdd:
+  base: [edit, c-pink]
+  modifier: add
+ToggleTraceFunctions:
+  base: [symbol-method, c-pink]
+  modifier: check
+ToggleTraceInstructions:
+  base: [debug-line-by-line, c-pink]
+  modifier: check
+
+# Diff / merge (local = home, remote = cloud)
+DiffPrevChunk:
+  base: [arrow-up, c-mauve]
+DiffNextChunk:
+  base: [arrow-down, c-mauve]
+DiffCenterChunk:
+  base: [target, c-mauve]
+DiffPrevConflict:
+  base: [arrow-up, c-mauve]
+  modifier: warning
+DiffNextConflict:
+  base: [arrow-down, c-mauve]
+  modifier: warning
+DiffApplyHandlerNoConflicts:
+  base: [git-merge, c-mauve]
+  modifier: check
+DiffApplyHandlerPickLocalOnConflict:
+  base: [home, c-mauve]
+  modifier: warning
+DiffApplyHandlerPickRemoteOnConflict:
+  base: [cloud, c-mauve]
+  modifier: warning
+DiffApplyPickLocal:
+  base: [home, c-mauve]
+DiffApplyPickRemote:
+  base: [cloud, c-mauve]
+DiffProceedToTheNextStep:
+  base: [arrow-circle-right, c-mauve]
+DiffToggleBasePanel:
+  base: [layout-panel, c-mauve]
+  modifier: check
+DiffToggleDetails:
+  base: [info, c-mauve]
+  modifier: check

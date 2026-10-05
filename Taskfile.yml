@@ -8,4 +8,9 @@ tasks:
   build:
     - uv run scripts/check-css.py
     - uv run scripts/build-css.py
+    - uv run scripts/build-icons.py
     - uv run scripts/build.py
+
+  install:
+    - task: build
+    - uv run scripts/install.py

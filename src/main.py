@@ -37,6 +37,12 @@ class CatppuccinPlugin(ida_idaapi.plugin_t):
     wanted_name = "Catppuccin"
     wanted_hotkey = ""
 
+    # Set by init() only when the theme is active; IDA calls term() even
+    # after init() returned PLUGIN_SKIP.
+    chrome: Chrome | None = None
+    retagger: Retagger | None = None
+    ui_hooks: _UiHooks | None = None
+
     def init(self):
         directory = theme_dir()
         if directory is None:
@@ -52,9 +58,12 @@ class CatppuccinPlugin(ida_idaapi.plugin_t):
         pass
 
     def term(self):
-        self.ui_hooks.unhook()
-        self.retagger.stop()
-        self.chrome.stop()
+        if self.ui_hooks is not None:
+            self.ui_hooks.unhook()
+        if self.retagger is not None:
+            self.retagger.stop()
+        if self.chrome is not None:
+            self.chrome.stop()
 
 
 def PLUGIN_ENTRY():

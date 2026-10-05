@@ -1,4 +1,4 @@
-"""The colour constants file (common.paths.CONST_FILE).
+"""The colour config file (common.paths.CONFIG_FILE).
 
 Generated CSS variables are ctp-<kind>-<name>:
   ctp-c-<name>  colours: `palette` entries and `tints`
@@ -17,10 +17,17 @@ import re
 import yaml
 
 from common.errors import ScriptError
-from common.paths import CONST_FILE, rel
+from common.paths import CONFIG_FILE, rel
 
-# Top-level role namespaces that are not used by the CSS (e.g. read by the plugin)
-NON_CSS_ROLES = {"titlebar"}
+# Which build consumes each top-level role namespace; any namespace not listed
+# here is for the CSS (ctp-r-* in the theme).
+CSS = "css"
+PYTHON = "python"   # the plugin, via src/color_gen.py (scripts/build-css.py)
+ICONS = "icons"     # generated SVGs (scripts/build-icons.py)
+ROLE_TARGETS = {
+    "titlebar": PYTHON,
+    "arrows": ICONS,
+}
 
 NAME_RE = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
 HEX_RE = re.compile(r"#[0-9a-fA-F]{6}")
@@ -28,7 +35,7 @@ DEFAULT_TINT_BASE = "c-base"
 
 
 def _fail(msg):
-    raise ScriptError("%s: %s" % (rel(CONST_FILE), msg))
+    raise ScriptError("%s: %s" % (rel(CONFIG_FILE), msg))
 
 
 def _check_name(name, where):
@@ -36,11 +43,11 @@ def _check_name(name, where):
         _fail("%s: invalid name %r (lowercase words joined by single dashes)" % (where, name))
 
 
-def load_const():
-    """The parsed constants file."""
-    if not os.path.isfile(CONST_FILE):
-        raise ScriptError("missing %s" % rel(CONST_FILE))
-    with open(CONST_FILE, encoding="utf-8") as f:
+def load_config():
+    """The parsed config file."""
+    if not os.path.isfile(CONFIG_FILE):
+        raise ScriptError("missing %s" % rel(CONFIG_FILE))
+    with open(CONFIG_FILE, encoding="utf-8") as f:
         data = yaml.safe_load(f)
     if not isinstance(data, dict):
         _fail("expected a mapping at the top level")
@@ -59,21 +66,21 @@ def _format_alpha(alpha):
     return text if float(text) == alpha else repr(alpha)
 
 
-def colors(const):
+def colors(config):
     """ctp-c-* values by name (without prefix), as CSS colour strings."""
     out = {}
-    for name, value in const["palette"].items():
+    for name, value in config["palette"].items():
         _check_name(name, "palette")
         if not isinstance(value, str) or not HEX_RE.fullmatch(value):
             _fail("palette.%s: expected a '#rrggbb' hex colour, got %r" % (name, value))
         out[name] = value.lower()
 
     def palette_rgb(ref, where):
-        if not isinstance(ref, str) or not ref.startswith("c-") or ref[2:] not in const["palette"]:
+        if not isinstance(ref, str) or not ref.startswith("c-") or ref[2:] not in config["palette"]:
             _fail("%s: %r is not a palette colour (c-<name>)" % (where, ref))
         return _rgb(out[ref[2:]])
 
-    for name, tint in const["tints"].items():
+    for name, tint in config["tints"].items():
         _check_name(name, "tints")
         where = "tints.%s" % name
         if name in out:
@@ -104,18 +111,19 @@ def _check_ref(ref, allowed, known, where):
     _fail("%s: %r must refer to %s" % (where, ref, " or ".join("%s-<name>" % k for k in allowed)))
 
 
-def definitions(const, color_values):
+def definitions(config, color_values):
     """ctp-d-* by name: the c- reference each one points at."""
     out = {}
-    for name, ref in const["definitions"].items():
+    for name, ref in config["definitions"].items():
         _check_name(name, "definitions")
         _check_ref(ref, ("c",), {"c": color_values}, "definitions.%s" % name)
         out[name] = ref
     return out
 
 
-def roles(const, color_values, definition_values, css_only=True):
-    """ctp-r-* in file order: [(name, reference)], name joined with `--`."""
+def roles(config, color_values, definition_values, target=CSS):
+    """Roles for one build target (see ROLE_TARGETS), in file order:
+    [(name, reference)], name joined with `--`."""
     known = {"c": color_values, "d": definition_values}
     out = []
 
@@ -129,10 +137,17 @@ def roles(const, color_values, definition_values, css_only=True):
                 _check_ref(value, ("c", "d"), known, "roles." + ".".join(here))
                 out.append(("--".join(here), value))
 
-    for key, value in const["roles"].items():
-        if css_only and key in NON_CSS_ROLES:
+    for key, value in config["roles"].items():
+        if ROLE_TARGETS.get(key, CSS) != target:
             continue
         if not isinstance(value, dict):
             _fail("roles.%s: expected a namespace" % key)
         walk({key: value}, [])
     return out
+
+
+def resolve(ref, color_values, definition_values):
+    """The final colour value of a c- or d- reference."""
+    if ref.startswith("d-"):
+        ref = definition_values[ref[2:]]
+    return color_values[ref[2:]]

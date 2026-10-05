@@ -1,10 +1,10 @@
 """
-Check the CSS sources against the constants file.
+Check the CSS sources against the config file.
 
     uv run scripts/check-css.py
 
 For the CSS files listed in src/styles.txt:
-- every `${...}` reference is a role (ctp-r-*) defined in the constants file,
+- every `${...}` reference is a role (ctp-r-*) defined in the config file,
   or an @def declared in the CSS itself; colours (ctp-c-*) and definitions
   (ctp-d-*) are only for the roles to use
 - every role is used exactly once, and every role is used
@@ -13,9 +13,9 @@ For the CSS files listed in src/styles.txt:
 
 import re
 
-from common.const import colors, definitions, load_const, roles
+from common.config import colors, definitions, load_config, roles
 from common.errors import ScriptError, run
-from common.paths import CONST_FILE, rel
+from common.paths import CONFIG_FILE, rel
 from common.styles import style_list, style_path
 
 REF_RE = re.compile(r"\$\{([^}]*)\}")
@@ -25,10 +25,10 @@ ROLE_PREFIX = "ctp-r-"
 
 
 def main():
-    const = load_const()
-    color_values = colors(const)
+    config = load_config()
+    color_values = colors(config)
     role_names = {ROLE_PREFIX + name for name, _ in
-                  roles(const, color_values, definitions(const, color_values))}
+                  roles(config, color_values, definitions(config, color_values))}
 
     sources = {}
     for path in style_list():
@@ -52,7 +52,7 @@ def main():
                 elif name in local_defs:
                     pass
                 elif name.startswith(ROLE_PREFIX):
-                    errors.append("%s: %s is not a role in %s" % (where, name, rel(CONST_FILE)))
+                    errors.append("%s: %s is not a role in %s" % (where, name, rel(CONFIG_FILE)))
                 else:
                     errors.append("%s: %s is not a role (CSS may only use %s* roles)"
                                   % (where, name, ROLE_PREFIX))
@@ -63,7 +63,7 @@ def main():
                           % (name, len(places), ", ".join(places)))
     unused = sorted(role_names - set(uses))
     for name in unused:
-        errors.append("%s is defined in %s but not used" % (name, rel(CONST_FILE)))
+        errors.append("%s is defined in %s but not used" % (name, rel(CONFIG_FILE)))
 
     for e in errors:
         print(e)

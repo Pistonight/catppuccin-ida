@@ -18,10 +18,7 @@ from PySide6.QtCore import QObject, QTimer
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QAbstractButton, QApplication
 
-# Catppuccin Mocha
-CAPTION = "#181825"   # mantle
-CAPTION_TEXT = "#cdd6f4"  # text
-BORDER = "#313244"    # surface0
+from color_gen import TITLEBAR__BORDER, TITLEBAR__CAPTION, TITLEBAR__TEXT
 
 DWMWA_USE_IMMERSIVE_DARK_MODE = 20
 DWMWA_BORDER_COLOR = 34
@@ -91,9 +88,9 @@ class Chrome(QObject):
             return
         self.styled.add(hwnd)
         self._set_dwm(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, 1)  # light caption buttons
-        self._set_dwm(hwnd, DWMWA_CAPTION_COLOR, _colorref(CAPTION))   # Windows 11 only;
-        self._set_dwm(hwnd, DWMWA_TEXT_COLOR, _colorref(CAPTION_TEXT))  # ignored on 10
-        self._set_dwm(hwnd, DWMWA_BORDER_COLOR, _colorref(BORDER))
+        self._set_dwm(hwnd, DWMWA_CAPTION_COLOR, _colorref(TITLEBAR__CAPTION))  # Windows 11 only;
+        self._set_dwm(hwnd, DWMWA_TEXT_COLOR, _colorref(TITLEBAR__TEXT))     # ignored on 10
+        self._set_dwm(hwnd, DWMWA_BORDER_COLOR, _colorref(TITLEBAR__BORDER))
 
     def _fix_nav_buttons(self):
         if not self.nav_buttons:

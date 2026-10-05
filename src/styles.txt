@@ -1,9 +1,6 @@
-# CSS bundled into dist/themes/catppuccin/theme.css by scripts/build-css.py,
-# in this order, after the definitions generated from const.yaml.
-# Files named icons_* only set images.
+# CSS bundled into dist theme.css
 
 css/widgets.css
 css/icons_arrow.css
 css/highlight.css
 css/ida_views.css
-css/icons_menu.css
