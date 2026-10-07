@@ -9,7 +9,7 @@ My Custom Catppuccin Theme for IDA, matching
   and numbers, which I need them to be different colors.
 - Applies other things through Windows/QT so the UI looks more correct.
 
-Quality: Slop + Script. I made the repo structure and AI did the research and implementation :).
+Quality: Mostly Slop. I made the repo structure and AI did the research and implementation :).
 Scripts have been converted to non slop;
 
 ## Requirements

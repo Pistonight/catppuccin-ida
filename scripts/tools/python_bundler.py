@@ -14,10 +14,34 @@ Rules for the modules, so the flattened file behaves like the modules did:
 """
 
 import ast
+import io
+import tokenize
 from typing import Callable, NamedTuple, Optional
 
 from common.errors import ScriptError
 from common.paths import rel
+
+
+class Guard(NamedTuple):
+    """Only run the bundle when `condition` holds; otherwise run `fallback`.
+    The bundle's imports and modules go inside `if condition:`, so nothing
+    they import is loaded when it does not hold (e.g. a module that refuses
+    to import there)."""
+    imports: str            # statements the condition and fallback need, placed before it
+    condition: str          # a Python expression
+    fallback: str           # statements for the `else:` branch
+
+
+def _indent(source, prefix="    "):
+    """`source` indented one level, except the lines inside multi-line
+    strings (their content must not change; Python does not care about their
+    indentation)."""
+    inside = set()               # 1-based line numbers continuing a multi-line token
+    for token in tokenize.generate_tokens(io.StringIO(source).readline):
+        if token.end[0] > token.start[0]:
+            inside.update(range(token.start[0] + 1, token.end[0] + 1))
+    return "\n".join(prefix + line if line.strip() and number not in inside else line
+                     for number, line in enumerate(source.split("\n"), 1))
 
 
 class Bundle(NamedTuple):
@@ -98,10 +122,12 @@ class _Module:
 
 
 def bundle_python_modules(entry_point, header="",
-                          missing_hint: Callable[[str], Optional[str]] = lambda name: None):
+                          missing_hint: Callable[[str], Optional[str]] = lambda name: None,
+                          guard: Optional[Guard] = None):
     """Bundle `entry_point` (a .py file) with the local modules it imports.
 
     `header` is a comment placed after the entry point's docstring.
+    `guard` (a Guard) wraps the bundle in a condition.
     `missing_hint(module)` is asked about every `from module import ...` that
     is not a local module; it returns an error message to fail with (e.g.
     for a generated module that is not built yet), or None for an external
@@ -165,10 +191,16 @@ def bundle_python_modules(entry_point, header="",
         parts.append(modules[entry].docstring)
     if header:
         parts.append(header)
-    parts.append("\n".join(imports))
+    body = ["\n".join(imports)]
     for name in order:
-        parts.append("# " + "-" * 68 + "\n# %s\n# " % rel(modules[name].path) + "-" * 68
-                     + "\n\n" + modules[name].body())
+        body.append("# " + "-" * 68 + "\n# %s\n# " % rel(modules[name].path) + "-" * 68
+                    + "\n\n" + modules[name].body())
+    if guard is None:
+        parts += body
+    else:
+        parts.append(guard.imports.strip("\n"))
+        parts.append("if %s:\n%s\nelse:\n%s" % (
+            guard.condition, _indent("\n\n\n".join(body)), _indent(guard.fallback.strip("\n"))))
     source = "\n\n\n".join(parts) + "\n"
     compile(source, str(entry_point), "exec")
     return Bundle(source, [modules[name].path for name in order])

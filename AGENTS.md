@@ -48,7 +48,8 @@ Full build: `./x build` (`scripts/build` / `build.ps1`) runs `check-css`, `build
 ```
 config.yaml              colours: palette, tints, definitions, roles
 config-icons-ida.yaml    `icons`: icon path (from src/ida/icon_meta.yaml, or extra/<name>.svg) -> codicon base,
-                         colour, modifier; `windows`: dock window title -> icon path
+                         colour, modifier; `windows`: dock window title -> icon path;
+                         `actions`: action name -> icon path (overrides)
 src/
   main_ida.py            IDA plugin entry (PLUGIN_ENTRY); merges the parts below
   ida/                   IDA plugin modules, imported as `ida.<name>`
@@ -143,12 +144,14 @@ The generated definitions block goes first in `theme.css` (with
   them from the `icons` section of `config-icons-ida.yaml`, keyed by path; its
   other top-level entries (names, `swapped`, `windows`, `plugin`: the 9.3
   layout) are ignored. New actions (Hex-Rays,
-  debugger, plugins) are caught on the 1 s refresh, but
-  `get_registered_actions()` (~860 names) is only called after a UI hook
-  that may have registered some (`ready_to_run`, `database_inited`,
-  `plugin_loaded`, `debugger_menu_change`, `widget_visible`; IDA has no
-  per-action hook) or every `ACTION_SCAN_FALLBACK_S` (10 s); `stop()`
-  restores and frees them. The same APIs exist in 9.3. Without the plugin
+  debugger, plugins) and icons IDA changes at runtime (`SetDirection`
+  up/down, the `Analysis` indicator, the Windows menu's `WindowActivate<n>`)
+  are both caught because every pass re-checks every action's current icon
+  (skipping the theme's own custom ids); a pass over ~860 actions takes
+  ~1 ms. Passes run on the 1 s refresh and, rate-limited to
+  `ACTION_SCAN_MIN_S`, after the `updated_actions` UI hook (and
+  `ready_to_run`, `database_inited`, `plugin_loaded`, `debugger_menu_change`,
+  `widget_visible`); `stop()` restores and frees them. The same APIs exist in 9.3. Without the plugin
   (or with `CATPPUCCIN_DISABLE=1` in the environment), IDA's stock icons show.
 - Dumping: `./x dump-icons` runs IDA headless (plugin off) on a stub
   binary with `scripts/ida/dump_icons.py`, which writes
@@ -195,6 +198,12 @@ The generated definitions block goes first in `theme.css` (with
   titles) are fixed up on its Show event, after IDA refills it. Docks are
   looked for after the `widget_visible` / `widget_invisible` /
   `current_widget_changed` UI hooks, or every `DOCK_SCAN_FALLBACK_S` (2 s).
+- The `actions` section of `config-icons-ida.yaml` maps an action name to
+  an icon path in `icons`, set on that action whatever icon it shows (e.g.
+  `CpuregsOpenRegDisasm`, which shares `WindowOpen` with `WindowOpen`). It is
+  generated into `ACTION_ICONS` in `src/ida/icon_meta_gen.py` (with
+  `UNNAMED_ICONS`); `ActionIcons` checks it first. An action missing from
+  `icon_meta.yaml` only warns (it may come from another plugin).
 - `extra/<name>.svg` entries in `icons` are icons IDA has no resource for
   (dock header buttons, Microcode window); the build accepts them without a
   metadata entry, and `test-icons-ida` shows them in their own section.
@@ -229,7 +238,11 @@ and in `ida/chrome_*.py` modules, one per class (`Chrome` creates them):
   theme has (`<theme>/<path>`) is rendered from `:/<prefix>/<path>` into a
   fingerprint table (per screen scale, built in `TABLE_SLICE_MS` slices),
   and views with a plain `QStyledItemDelegate` get `IconSwapDelegate`, which
-  swaps matching row icons as they draw (cached per `QIcon.cacheKey`). Views
+  swaps matching row icons as they draw (cached per `QIcon.cacheKey`). The
+  same lookup fixes menu entries whose icon IDA sets directly, with no
+  action behind it (submenus: Edit > Strings shows the current string type,
+  Operand type > Offset / Number): menus get an event filter that swaps
+  their entries' icons on Show, after IDA refilled them. Views and menus
   are looked for after the `widget_visible` UI hook, or every
   `VIEW_SCAN_FALLBACK_S` (10 s).
 - Disabled icons (`chrome_faded_disabled_icons.py`): Qt derives them by remapping grey around the window colour

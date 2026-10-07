@@ -6,15 +6,19 @@ recognised by their pixels: every icon the theme has a version of
 (<theme>/<path>, see chrome_icon_resources.py) is rendered from its resource
 (:/<prefix>/<path>) the way IDA renders it, and a row icon drawing the same
 pixels is swapped for the theme's.
+
+The same lookup fixes menu entries whose icon IDA sets directly, with no
+action behind it (submenus like Edit > Strings, which shows the current
+string type), when their menu shows.
 """
 
 import hashlib
 import time
 
 import ida_kernwin
-from PySide6.QtCore import QSize, QTimer
+from PySide6.QtCore import QEvent, QObject, QSize, QTimer
 from PySide6.QtGui import QIcon, QImage
-from PySide6.QtWidgets import QAbstractItemView, QApplication, QHeaderView, QStyledItemDelegate
+from PySide6.QtWidgets import QAbstractItemView, QApplication, QHeaderView, QMenu, QStyledItemDelegate
 
 from perf import perf
 
@@ -23,6 +27,7 @@ TABLE_SLICE_MS = 8           # longest a slice of a lookup table build may block
 # Views are looked for after a new IDA window shows (_IconSwapHooks); this
 # catches the rest (e.g. dialogs).
 VIEW_SCAN_FALLBACK_S = 10
+MENU_WATCHED_PROPERTY = "catppuccinIconSwap"   # on menus with the event filter
 
 
 def _fingerprint(image):
@@ -38,11 +43,13 @@ def _scale():
     return app.devicePixelRatio()
 
 
-class IconSwap:
+class IconSwap(QObject):
     """Swaps IDA's original icons for the theme's in list/tree rows drawn by
-    a plain QStyledItemDelegate (it gets an IconSwapDelegate)."""
+    a plain QStyledItemDelegate (it gets an IconSwapDelegate), and in menu
+    entries when their menu shows."""
 
     def __init__(self, resources):
+        super().__init__()
         # (original QIcon, theme QIcon) for every icon the theme has. A few
         # originals may be pixel-identical; those take the first path's icon.
         self.pairs = []
@@ -119,6 +126,23 @@ class IconSwap:
                 delegate = w.itemDelegate()
                 if delegate is not None and delegate.metaObject().className() == "QStyledItemDelegate":
                     w.setItemDelegate(IconSwapDelegate(self, w))
+            elif isinstance(w, QMenu) and not w.property(MENU_WATCHED_PROPERTY):
+                w.setProperty(MENU_WATCHED_PROPERTY, True)
+                w.installEventFilter(self)
+
+    def eventFilter(self, watched, event):
+        """A menu about to show (IDA has just refilled it): swap its entries'
+        original icons, e.g. submenus whose icon IDA sets directly."""
+        if event.type() == QEvent.Type.Show and isinstance(watched, QMenu):
+            try:
+                with perf.measure("row icons: menu"):
+                    for action in watched.actions():
+                        replacement = self.icon(action.icon())
+                        if replacement is not None:
+                            action.setIcon(replacement)
+            except RuntimeError:                 # menu deleted under us
+                pass
+        return False
 
     def stop(self):
         self.hooks.unhook()

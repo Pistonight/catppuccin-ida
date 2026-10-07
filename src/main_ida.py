@@ -4,9 +4,9 @@ Catppuccin for IDA 9.x: the runtime half of the catppuccin theme.
 - re-tags Hex-Rays pseudocode so each kind of token can have its own colour
 - colours Windows title bars and the nav band scroll arrows
 
-Does nothing unless the catppuccin theme is active, or if the environment
-variable CATPPUCCIN_DISABLE is 1 (set by ./x dump-icons, to see IDA's own
-icons).
+Does nothing unless the catppuccin theme is active in IDA's GUI: not in
+text mode / idalib (no GUI to theme), and not if the environment variable
+CATPPUCCIN_DISABLE is 1 (set by ./x dump-icons, to see IDA's own icons).
 
 Install: copy this file to %APPDATA%\\Hex-Rays\\IDA Pro\\plugins\\
 """
@@ -51,9 +51,12 @@ class CatppuccinPlugin(ida_idaapi.plugin_t):
     ui_hooks: _UiHooks | None = None
 
     def init(self):
+        # Checked before anything touches Qt: headless IDA has no QApplication.
+        if os.environ.get(DISABLE_ENV) == "1" or not ida_kernwin.is_idaq():
+            return ida_idaapi.PLUGIN_SKIP
         with perf.measure("init: total", report=True):
             directory = theme_dir()
-            if directory is None or os.environ.get(DISABLE_ENV) == "1":
+            if directory is None:
                 return ida_idaapi.PLUGIN_SKIP
             perf.start()
             self.chrome = Chrome(directory)

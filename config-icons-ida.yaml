@@ -53,11 +53,9 @@ icons:
     base: [file, c-text]
     modifier: add
 
-  # Dock windows (the old `windows` section: window title -> icon), designs
-  # copied from the old top-level entries. Also the icons of the actions
-  # opening them.
+  # Dock windows
   resources/menu/WindowOpen.svg:  # IDA View*
-    base: [multiple-windows, c-text]
+    base: [chip, c-green]
   resources/menu/ToggleDump.svg:  # Hex View*
     base: [file-binary, c-text]
     modifier: check
@@ -92,16 +90,12 @@ icons:
   resources/menu/ShowUndoHistory.svg:  # Undo history
     base: [discard, c-text]
   resources/menu/OutputWindow.svg:  # Output, Output window
-    base: [output, c-text]
-  # New in 9.4, no action shows it: presumably the Pseudocode* window's
-  # (was plugin/window-pseudocode). Microcode* has no named icon.
+    base: [terminal, c-text]
   resources/menu/Pseudocode.svg:
     base: [code, c-mauve]
 
-  # List rows: Local Types struct entries (was swapped: IDAG/resources/widgets/struct)
   resources/widgets/struct.svg:
     base: [symbol-structure, c-blue]
-
 
 
   # Functions
@@ -289,8 +283,8 @@ icons:
   resources/menu/SearchNext.svg:
     base: [search, c-sapphire]
     modifier: down
-  resources/menu/SetDirection.svg:
-    base: [arrow-both, c-sapphire]
+  resources/menu/SetDirection.svg:  # search direction: down (SetDirectionUp: up)
+    base: [arrow-down, c-sapphire]
   resources/menu/ActinsQuickFilter.svg:
     base: [filter, c-sapphire]
 
@@ -329,9 +323,6 @@ icons:
     modifier: delete
   resources/menu/ShowFlags.svg:
     base: [flag, c-text]
-  # TwoFlags:
-  #   base: [flag, c-text]
-  #   modifier: add
 
   # Files, databases, desktops (down = save/export, up = load)
   resources/menu/LoadFile.svg:
@@ -661,7 +652,7 @@ icons:
     base: [debug-step-into, c-blue]
   resources/menu/OpenPathfinder.svg:  # OpenPathfinder
     base: [search, c-teal]
-  resources/menu/SetDirectionUp.svg:  # SetDirection is arrow-both
+  resources/menu/SetDirectionUp.svg:  # search direction: up (SetDirection: down)
     base: [arrow-up, c-sapphire]
 
   # Numbered icons: no action shows them (rows, markers, dialogs), so the
@@ -700,10 +691,12 @@ icons:
     base: [file-text, c-green]
   resources/menu/79.svg:  # D
     base: [file-binary, c-blue]
-  resources/menu/81.svg:  # page with f
-    base: [file-code, c-blue]
-  resources/menu/82.svg:  # green page with f
-    base: [file-code, c-green]
+  resources/menu/81.svg:  # exported function (down = export)
+    base: [symbol-method, c-yellow]
+    modifier: down
+  resources/menu/82.svg:  # imported function (up = import)
+    base: [symbol-method, c-yellow]
+    modifier: up
   resources/menu/86.svg:  # back arrow
     base: [reply, c-blue]
   resources/menu/96.svg:  # window, lightning
@@ -941,6 +934,15 @@ icons:
     base: [multiple-windows, c-subtext0]
   extra/window-microcode.svg:  # Microcode* windows (IDA's icon is unnamed)
     base: [chip, c-peach]
+  # this is commented out because WindowOpen is the open IDA view action name
+  # extra/window-disassembly.svg:  # IDA View* windows, CpuregsOpenRegDisasm
+  #   base: [chip, c-green]
+
+# Remap action icons: action name -> the path of an icon in `icons` above, set on
+# the action whatever icon IDA gives it (e.g. an action sharing a built-in
+# icon with others). See src/ida/icon_meta.yaml for the action names.
+actions:
+  # CpuregsOpenRegDisasm: extra/window-disassembly.svg
 
 # Dock window icons: window title -> the path of an icon in `icons` above,
 # shown in its tab, header, title bar and Windows menu entry. IDA draws these

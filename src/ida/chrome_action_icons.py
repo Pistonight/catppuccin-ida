@@ -7,12 +7,15 @@ theme's icons are set on the actions through the SDK instead.
 import time
 
 import ida_kernwin
+from PySide6.QtCore import QTimer
 
-from ida.icon_meta_gen import UNNAMED_ICONS
+from ida.icon_meta_gen import ACTION_ICONS, UNNAMED_ICONS
 
-# Actions are only looked for after events that register them (_ActionIconHooks);
-# this catches the rest (e.g. a script registering one later).
-ACTION_SCAN_FALLBACK_S = 10
+# IDA changes some actions' icons at runtime (SetDirection up/down, the
+# Analysis indicator, the Windows menu's WindowActivate<n>), so every action is
+# re-checked: after IDA updates actions (_ActionIconHooks), at most every
+# ACTION_SCAN_MIN_S, and on every refresh. A pass over ~860 actions takes ~1 ms.
+ACTION_SCAN_MIN_S = 0.1
 # Print the icons actions show that the theme has no version of (by the
 # path the theme's version would have, or #<id> for an unnamed icon the icon
 # meta does not know), with the actions showing them; e.g. new ones, or
@@ -31,11 +34,13 @@ class ActionIcons:
       nothing maps their id back to a file, so icon_meta lists the actions
       (UNNAMED_ICONS, `map_by_action`).
 
-    Icons the theme has no version of are reported (REPORT_MISSING_ICONS).
-    Actions registered later (Hex-Rays, the debugger, plugins) are picked up
-    by refresh(). Listing every action each time costs, so refresh() only
-    does it after an event that may have registered some (see
-    _ActionIconHooks), or ACTION_SCAN_FALLBACK_S after the last scan."""
+    An action in ACTION_ICONS (config `actions`) gets that icon instead,
+    whatever icon it shows.
+
+    Every pass looks at every action's current icon, so actions registered
+    later (Hex-Rays, the debugger, plugins) and icons IDA changes later are
+    both caught. Icons the theme has no version of are reported
+    (REPORT_MISSING_ICONS)."""
 
     def __init__(self, resources):
         self.resources = resources       # IconResources
@@ -43,33 +48,38 @@ class ActionIcons:
         for path, actions in UNNAMED_ICONS:
             for action in actions:
                 self.unnamed[action] = (path, resources.theme_file(path))
+        # action -> (path, theme file or None), whatever icon it shows
+        self.overrides = {action: (path, resources.theme_file(path)) for action, path in ACTION_ICONS.items()}
         self.loaded = {}             # theme file -> custom icon id (loaded on first use)
-        self.replaced = {}           # action -> its original icon id
-        self.seen = set()            # actions already looked at
-        self.reported = set()        # missing icons already reported
-        self.stale = True            # actions may have been registered since the last scan
+        self.custom_ids = set()      # the loaded custom icon ids
+        self.replaced = {}           # action -> its latest original icon id
+        self.reported = set()        # (missing icon, action) already reported
         self.last_scan = 0.0
+        self.pending = False         # a scan is scheduled
         self.hooks = _ActionIconHooks(self)
         self.hooks.hook()
 
-    def mark_stale(self):
-        self.stale = True
+    def request_scan(self):
+        """Scan soon (once per burst of requests, at most every ACTION_SCAN_MIN_S)."""
+        if not self.pending:
+            self.pending = True
+            delay = max(0.0, ACTION_SCAN_MIN_S - (time.monotonic() - self.last_scan))
+            QTimer.singleShot(int(delay * 1000), self._scheduled_scan)
+
+    def _scheduled_scan(self):
+        self.pending = False
+        self.refresh()
 
     def refresh(self):
-        now = time.monotonic()
-        if not self.stale and now - self.last_scan < ACTION_SCAN_FALLBACK_S:
-            return
-        self.stale = False
-        self.last_scan = now
+        self.last_scan = time.monotonic()
         missing = {}                 # what the theme lacks -> [action]
         for action in ida_kernwin.get_registered_actions():
-            if action in self.seen:
-                continue
-            self.seen.add(action)
             ok, original = ida_kernwin.get_action_icon(action)
-            if not ok or original < 0:
-                continue
-            if original in self.resources.table:
+            if not ok or original < 0 or original in self.custom_ids:
+                continue             # no icon, or already the theme's
+            if action in self.overrides:
+                name, file = self.overrides[action]
+            elif original in self.resources.table:
                 name = self.resources.table[original]
                 file = self.resources.theme_file(name)
             elif action in self.unnamed:
@@ -79,25 +89,19 @@ class ActionIcons:
             custom = self._custom_icon(file) if file is not None else None
             if custom is not None and ida_kernwin.update_action_icon(action, custom):
                 self.replaced[action] = original
-            else:
+            elif (name, action) not in self.reported:
                 missing.setdefault(name, []).append(action)
-        if REPORT_MISSING_ICONS:
-            self._report(missing)
-
-    def _report(self, missing):
-        """Print the icons the theme has no version of, once each (an icon
-        reported before is only listed again with its newly seen actions)."""
-        if not missing:
-            return
-        print("catppuccin: no theme icon for %d icons, IDA's kept: %s" % (len(missing), "; ".join(
-            "%s%s (%s)" % (name, "" if name not in self.reported else " (more)", ", ".join(sorted(actions)))
-            for name, actions in sorted(missing.items()))))
-        self.reported.update(missing)
+        if REPORT_MISSING_ICONS and missing:
+            print("catppuccin: no theme icon for %d icons, IDA's kept: %s" % (len(missing), "; ".join(
+                "%s (%s)" % (name, ", ".join(sorted(actions))) for name, actions in sorted(missing.items()))))
+            self.reported.update((name, a) for name, actions in missing.items() for a in actions)
 
     def _custom_icon(self, file):
         if file not in self.loaded:
             custom = ida_kernwin.load_custom_icon(file)
             self.loaded[file] = custom if custom > 0 else None
+            if custom > 0:
+                self.custom_ids.add(custom)
         return self.loaded[file]
 
     def stop(self):
@@ -112,29 +116,31 @@ class ActionIcons:
                 ida_kernwin.free_custom_icon(custom)
         self.replaced.clear()
         self.loaded.clear()
-        self.seen.clear()
+        self.custom_ids.clear()
 
 
 class _ActionIconHooks(ida_kernwin.UI_Hooks):
-    """Marks the action icons stale on the events that register actions
-    (IDA has no hook for a single action); the scan itself waits for the
-    next refresh, so a burst of events costs one scan."""
+    """Asks for a scan when IDA may have registered actions or changed their
+    icons (IDA has no hook for a single action)."""
 
     def __init__(self, icons):
         super().__init__()
         self.icons = icons
 
+    def updated_actions(self):
+        self.icons.request_scan()
+
     def ready_to_run(self):
-        self.icons.mark_stale()
+        self.icons.request_scan()
 
     def database_inited(self, is_new_database, idc_script):
-        self.icons.mark_stale()
+        self.icons.request_scan()
 
     def plugin_loaded(self, plugin_info):
-        self.icons.mark_stale()
+        self.icons.request_scan()
 
     def debugger_menu_change(self, enable):
-        self.icons.mark_stale()
+        self.icons.request_scan()
 
     def widget_visible(self, widget):
-        self.icons.mark_stale()
+        self.icons.request_scan()

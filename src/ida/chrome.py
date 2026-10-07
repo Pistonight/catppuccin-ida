@@ -52,8 +52,12 @@ def _app():
 
 
 def theme_dir():
-    """The active catppuccin theme folder, or None if another theme is active."""
-    m = THEME_DIR_RE.search(_app().styleSheet())
+    """The active catppuccin theme folder, or None if another theme is active
+    (or there is no GUI)."""
+    app = QApplication.instance()
+    if not isinstance(app, QApplication):
+        return None
+    m = THEME_DIR_RE.search(app.styleSheet())
     return m.group(1) if m else None
 
 
