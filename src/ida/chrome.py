@@ -9,7 +9,8 @@ sheets:
   theme is applied, so we replace it at runtime.
 
 Icons are in chrome_*.py modules (chrome_faded_disabled_icons,
-chrome_action_icons, chrome_icon_swap, sharing chrome_icon_resources); Chrome sets them up and
+chrome_action_icons, chrome_icon_swap, chrome_window_icons, sharing
+chrome_icon_resources); Chrome sets them up and
 refreshes them with everything else.
 """
 
@@ -27,6 +28,7 @@ from ida.chrome_action_icons import ActionIcons
 from ida.chrome_faded_disabled_icons import install_faded_disabled_icons
 from ida.chrome_icon_resources import IconResources
 from ida.chrome_icon_swap import IconSwap
+from ida.chrome_window_icons import WindowIcons
 from perf import perf
 
 DWMWA_USE_IMMERSIVE_DARK_MODE = 20
@@ -73,6 +75,8 @@ class Chrome(QObject):
             self.action_icons = ActionIcons(self.icon_resources)
         with perf.measure("init: row icons", report=True):
             self.icon_swap = IconSwap(self.icon_resources)
+        with perf.measure("init: window icons", report=True):
+            self.window_icons = WindowIcons(theme_dir)
 
         _app().focusChanged.connect(self.refresh)   # new dialogs take focus
         self.timer = QTimer(self)                # catches everything else
@@ -89,6 +93,7 @@ class Chrome(QObject):
             pass
         self.action_icons.stop()
         self.icon_swap.stop()
+        self.window_icons.stop()
 
     def refresh(self, *_):
         with perf.measure("refresh"):
@@ -102,6 +107,8 @@ class Chrome(QObject):
                 self.action_icons.refresh()
             with perf.measure("refresh: row icons"):
                 self.icon_swap.refresh()
+            with perf.measure("refresh: window icons"):
+                self.window_icons.refresh()
 
     def _set_dwm(self, hwnd, attr, value):
         v = ctypes.c_int(value)

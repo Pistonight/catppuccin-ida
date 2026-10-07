@@ -6,7 +6,8 @@ Preview IDA's action icons, original against themed.
 Reads only:
 - src/ida/icon_meta.yaml (dump-icons): every icon, its path, its actions;
 - .cache/ida-icon-dump/svg/<path> (dump-icons): IDA's originals;
-- dist/catppuccin-ida/themes/catppuccin/<path> (the build): the theme's.
+- dist/catppuccin-ida/themes/catppuccin/<path> (the build): the theme's, plus
+  its extra/ icons (no IDA original; shown in their own section).
 
 One tile per icon, grouped by folder, showing its actions. A toggle at the
 top (always visible; or press T) switches every tile between the original
@@ -27,6 +28,7 @@ from common.icon_meta import load_icon_meta
 from common.paths import DIST_THEME, ICON_DUMP_DIR, IDA_ICON_TEST_PAGE, file_url, rel
 
 ORIGINALS_DIR = ICON_DUMP_DIR / "svg"
+EXTRA_DIR = "extra"           # icons IDA has no resource for (config `icons` extra/...)
 
 PAGE = """<!doctype html>
 <html>
@@ -162,7 +164,18 @@ def main():
             actions=html.escape(", ".join(icon.actions)) if icon.actions else "no actions",
             actions_class="" if icon.actions else " empty"))
 
-    sections = [SECTION.format(folder=html.escape(folder), count=len(tiles), tiles="\n".join(tiles))
+    # Extra icons IDA has no resource for: whatever the build put in extra/
+    for file in sorted((DIST_THEME / EXTRA_DIR).glob("**/*.svg")):
+        path = file.relative_to(DIST_THEME).as_posix()
+        folder, _, name = path.rpartition("/")
+        folders[folder].append(TILE.format(
+            original=_placeholder("none"),
+            original_title=html.escape("themes/catppuccin/%s\nextra: IDA has no original" % path),
+            themed=_images(file), themed_title=html.escape("themes/catppuccin/" + path),
+            name=html.escape(name), tag='<span class="tag">extra</span>',
+            actions="used by the plugin / CSS", actions_class=" empty"))
+
+    sections =[SECTION.format(folder=html.escape(folder), count=len(tiles), tiles="\n".join(tiles))
                 for folder, tiles in sorted(folders.items())]
     page = PAGE.format(
         base=palette["base"], mantle=palette["mantle"], text=palette["text"], subtext=palette["subtext0"],

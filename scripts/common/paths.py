@@ -34,6 +34,8 @@ COLOR_GEN = SRC / "color_gen.py"
 # The icons IDA's actions show (from dump-icons), and the part the plugin needs
 ICON_META_FILE = SRC / "ida" / "icon_meta.yaml"
 ICON_META_GEN = SRC / "ida" / "icon_meta_gen.py"
+# Dock window icons by title, from config-icons-ida.yaml `windows`
+WINDOW_ICONS_GEN = SRC / "ida" / "window_icons_gen.py"
 # @vscode/codicons, installed with pnpm (codicon_file())
 CODICONS_DIR = ROOT / "node_modules" / "@vscode" / "codicons" / "src" / "icons"
 # Run inside IDA (headless) by dump-icons
@@ -50,10 +52,6 @@ DIST_PLUGIN = DIST_IDA / "plugins" / "catppuccin.py"
 DIST_THEME = DIST_IDA / "themes" / "catppuccin"
 THEME_CSS = DIST_THEME / "theme.css"
 ICONS_DIR = DIST_THEME / "icons"
-MENU_ICONS_DIR = ICONS_DIR / "menu"
-# Icons the plugin swaps at runtime, at icons/swapped/<resource path>.svg
-SWAPPED_ICONS_DIR = ICONS_DIR / "swapped"
-PLUGIN_ICONS_DIR = ICONS_DIR / "plugin"
 RENDER_ICONS_PAGE = DIST / "test_icons.html"
 
 # Installed items, relative to both DIST_IDA and the IDA user directory

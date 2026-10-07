@@ -49,8 +49,9 @@ icons:
   action_ids/668.svg:  # GitAccount
     base: [account, c-blue]
 
-  resources/icons/actions/add_file.svg:
-    base: [symbol-method, c-yellow]
+  resources/icons/actions/add_file.svg:  # Teams: add file
+    base: [file, c-text]
+    modifier: add
 
   # Dock windows (the old `windows` section: window title -> icon), designs
   # copied from the old top-level entries. Also the icons of the actions
@@ -103,623 +104,867 @@ icons:
 
 
 
-# Functions
-Function:
-  base: [symbol-method, c-yellow]
-MakeFunction:
-  base: [symbol-method, c-yellow]
-  modifier: add
-EditFunction:
-  base: [symbol-method, c-yellow]
-  modifier: edit
-FuncChangeCC:
-  base: [symbol-method, c-yellow]
-  modifier: sync
-OpenFunctions:
-  base: [symbol-method-arrow, c-yellow]
-TilAddFuncArg:
-  base: [symbol-parameter, c-blue]
-  modifier: add
-EditArgloc:
-  base: [symbol-parameter, c-blue]
-  modifier: edit
+  # Functions
+  resources/menu/Function.svg:
+    base: [symbol-method, c-yellow]
+  resources/menu/MakeFunction.svg:
+    base: [symbol-method, c-yellow]
+    modifier: add
+  resources/menu/EditFunction.svg:
+    base: [symbol-method, c-yellow]
+    modifier: edit
+  resources/menu/FuncChangeCC.svg:
+    base: [symbol-method, c-yellow]
+    modifier: sync
+  resources/menu/TilAddFuncArg.svg:
+    base: [symbol-parameter, c-blue]
+    modifier: add
+  resources/menu/EditArgloc.svg:
+    base: [symbol-parameter, c-blue]
+    modifier: edit
 
-# Types, structures, enums, constants
-OpenLocalTypes:
-  base: [symbol-class, c-blue]
-SetType:
-  base: [symbol-class, c-blue]
-  modifier: edit
-TilAddType:
-  base: [symbol-class, c-blue]
-  modifier: add
-TilDelType:
-  base: [symbol-class, c-blue]
-  modifier: delete
-LocalTypesExportToHeader:
-  base: [symbol-class, c-blue]
-  modifier: down
-OpenTypeLibraries:
-  base: [library, c-blue]
-CreateStructFromData:
-  base: [symbol-structure, c-blue]
-  modifier: add
-ShrinkStruct:
-  base: [symbol-structure, c-blue]
-  modifier: remove
-DeclareStructVar:
-  base: [symbol-structure, c-lavender]
-CopyStruct:
-  base: [copy, c-blue]
-EditFullTypeCopy:
-  base: [copy, c-lavender]
-AddEnum:
-  base: [symbol-enum, c-blue]
-  modifier: add
-DelEnum:
-  base: [symbol-enum, c-blue]
-  modifier: delete
-EditEnum:
-  base: [symbol-enum, c-blue]
-  modifier: edit
-AddConst:
-  base: [symbol-constant, c-peach]
-  modifier: add
-DelConst:
-  base: [symbol-constant, c-peach]
-  modifier: delete
-TilEditConst:
-  base: [symbol-constant, c-peach]
-  modifier: edit
-
-# Defining code and data
-MakeCode:
-  base: [code, c-mauve]
-MakeData:
-  base: [symbol-field, c-peach]
-MakeArray:
-  base: [symbol-array, c-peach]
-MakeStrlit:
-  base: [symbol-string, c-green]
-  modifier: add
-MakeUnknown:
-  base: [eraser, c-overlay2]
-MakeName:
-  base: [rename, c-lavender]
-ManualOperand:
-  base: [edit, c-text]
-
-# Comments and extra lines
-MakeComment:
-  base: [comment, c-overlay2]
-MakeRptCmt:
-  base: [comment-discussion, c-overlay2]
-MakeExtraLineA:
-  base: [keyboard-tab-above, c-overlay2]
-MakeExtraLineB:
-  base: [keyboard-tab-below, c-overlay2]
-
-# Operand formats
-OpNumber:
-  base: [symbol-numeric, c-peach]
-OpHex:
-  base: [symbol-numeric, c-maroon]
-OpDecimal:
-  base: [symbol-numeric, c-flamingo]
-OpOctal:
-  base: [symbol-numeric, c-rosewater]
-OpBinary:
-  base: [file-binary, c-peach]
-OpFloat:
-  base: [symbol-ruler, c-peach]
-OpChar:
-  base: [case-sensitive, c-green]
-OpEnum:
-  base: [symbol-enum-member, c-blue]
-OpOffset:
-  base: [link, c-sapphire]
-OpOffsetCs:
-  base: [link-external, c-sapphire]
-OpAnyOffset:
-  base: [references, c-sapphire]
-OpUserOffset:
-  base: [link, c-sapphire]
-  modifier: edit
-OpStructOffset:
-  base: [symbol-structure, c-sapphire]
-OpSegment:
-  base: [symbol-namespace, c-sapphire]
-OpStackVariable:
-  base: [symbol-variable, c-lavender]
-BitwiseNegate:
-  base: [symbol-operator, c-peach]
-ChangeSign:
-  base: [symbol-numeric, c-peach]
-  modifier: remove
-ToggleLeadingZeroes:
-  base: [index-zero, c-overlay2]
-  modifier: check
-
-# String literal types
-StringC:
-  base: [quote, c-green]
-StringDOS:
-  base: [terminal-cmd, c-green]
-StringDelphi:
-  base: [quotes, c-green]
-StringPascal1:
-  base: [quotes, c-teal]
-StringPascal2:
-  base: [quotes, c-sky]
-StringUnicode:
-  base: [text-size, c-green]
-StringUnicodePascal2:
-  base: [text-size, c-teal]
-StringUnicodePascal4:
-  base: [text-size, c-sky]
-
-# Navigation
-JumpEnter:
-  base: [arrow-small-right, c-sky]
-JumpEnterNew:
-  base: [link-external, c-sky]
-JumpNewDump:
-  base: [file-binary, c-sky]
-  modifier: add
-JumpToIP:
-  base: [target, c-sky]
-Return:
-  base: [arrow-left, c-sky]
-UndoReturn:
-  base: [arrow-right, c-sky]
-AddressDetails:
-  base: [info, c-sky]
-Bookmarks:
-  base: [bookmark, c-yellow]
-
-# Search (down = next)
-AskBinaryText:
-  base: [file-binary, c-sapphire]
-JumpBinaryText:
-  base: [file-binary, c-sapphire]
-  modifier: down
-JumpImmediate:
-  base: [symbol-numeric, c-sapphire]
-AskNextImmediate:
-  base: [symbol-numeric, c-sapphire]
-  modifier: down
-JumpText:
-  base: [whole-word, c-sapphire]
-AskNextText:
-  base: [whole-word, c-sapphire]
-  modifier: down
-SearchNext:
-  base: [search, c-sapphire]
-  modifier: down
-SetDirection:
-  base: [arrow-both, c-sapphire]
-ActinsQuickFilter:
-  base: [filter, c-sapphire]
-
-# Views and windows
-OpenExports:
-  base: [export, c-lavender]
-OpenImports:
-  base: [desktop-download, c-lavender]
-OpenNames:
-  base: [tag, c-lavender]
-OpenStrings:
-  base: [symbol-string, c-green]
-OpenSegments:
-  base: [layers, c-sapphire]
-OpenSegmentRegisters:
-  base: [symbol-namespace, c-sapphire]
-OpenSelectors:
-  base: [list-selection, c-sapphire]
-OpenSignatures:
-  base: [library, c-mauve]
-OpenStackVariables:
-  base: [debug-stackframe, c-lavender]
-Locals:
-  base: [symbol-variable, c-lavender]
-OpenXrefs:
-  base: [references, c-teal]
-OpenXrefsTree:
-  base: [list-tree, c-teal]
-OpenNotepad:
-  base: [note, c-text]
-OpenProblems:
-  base: [warning, c-yellow]
-OutputWindow:
-  base: [output, c-text]
-WindowOpen:
-  base: [multiple-windows, c-text]
-WindowsList:
-  base: [list-unordered, c-text]
-Modules:
-  base: [package, c-blue]
-PatchedBytes:
-  base: [diff-modified, c-maroon]
-SwitchToSource:
-  base: [file-code, c-text]
-ToggleDump:
-  base: [file-binary, c-text]
-  modifier: check
-ToggleSourceDebug:
-  base: [file-code, c-text]
-  modifier: check
-
-# Showing and hiding
-Hide:
-  base: [eye-closed, c-subtext0]
-HideAll:
-  base: [collapse-all, c-subtext0]
-UnHide:
-  base: [eye, c-subtext0]
-UnHideAll:
-  base: [expand-all, c-subtext0]
-DelHiddenRange:
-  base: [eye-closed, c-subtext0]
-  modifier: delete
-ShowFlags:
-  base: [flag, c-text]
-# TwoFlags:
-#   base: [flag, c-text]
-#   modifier: add
-
-# Files, databases, desktops (down = save/export, up = load)
-LoadFile:
-  base: [file, c-text]
-  modifier: up
-LoadNewFile:
-  base: [folder-opened, c-text]
-LoadSigFile:
-  base: [library, c-mauve]
-  modifier: up
-SaveBase:
-  base: [save, c-blue]
-SaveBaseSnap:
-  base: [save-all, c-blue]
-TakeSnapshot:
-  base: [device-camera, c-blue]
-ShowSnapMan:
-  base: [versions, c-blue]
-DumpDatabase:
-  base: [database, c-blue]
-  modifier: down
-DumpTypes:
-  base: [file-code, c-blue]
-  modifier: down
-ProduceAsm:
-  base: [file-code, c-text]
-  modifier: down
-ProduceHeader:
-  base: [symbol-file, c-text]
-  modifier: down
-ProduceInc:
-  base: [file-text, c-text]
-  modifier: down
-ProduceLst:
-  base: [list-ordered, c-text]
-  modifier: down
-LoadDesktop:
-  base: [layout, c-text]
-  modifier: up
-SaveDesktop:
-  base: [layout, c-text]
-  modifier: down
-DeleteDesktop:
-  base: [layout, c-text]
-  modifier: delete
-
-# Scripts, settings, help
-Execute:
-  base: [play, c-green]
-ExecuteLine:
-  base: [debug-console, c-green]
-RecentScripts:
-  base: [history, c-text]
-Calculate:
-  base: [percentage, c-teal]
-Options:
-  base: [settings-gear, c-text]
-ShortcutEditor:
-  base: [record-keys, c-text]
-ShowHelp:
-  base: [question, c-sky]
-ShowUndoHistory:
-  base: [discard, c-text]
-EditCopy:
-  base: [copy, c-text]
-Analysis:
-  base: [beaker, c-teal]
-Waiting:
-  base: [loading, c-text]
-QuitIDA:
-  base: [sign-out, c-red]
-
-# Graphs and charts
-GraphGraphView:
-  base: [type-hierarchy, c-teal]
-GraphFlatView:
-  base: [list-flat, c-teal]
-GraphFunc:
-  base: [type-hierarchy-sub, c-teal]
-FunctionCallGraph:
-  base: [type-hierarchy-super, c-teal]
-CallFlow:
-  base: [references, c-teal]
-ChartXrefsFrom:
-  base: [call-outgoing, c-teal]
-ChartXrefsTo:
-  base: [call-incoming, c-teal]
-ChartXrefsUser:
-  base: [graph-line, c-teal]
-  modifier: edit
-GraphOverview:
-  base: [map, c-teal]
-GraphLayout:
-  base: [editor-layout, c-teal]
-GraphOrthogonalLayout:
-  base: [table, c-teal]
-GraphGroup:
-  base: [group-by-ref-type, c-teal]
-GraphUngroup:
-  base: [ungroup-by-ref-type, c-teal]
-GraphColor:
-  base: [paintcan, c-teal]
-GraphSetupColors:
-  base: [symbol-color, c-teal]
-GraphSetupOptions:
-  base: [settings-gear, c-teal]
-GraphPrint:
-  base: [file-pdf, c-teal]
-GraphZoom100:
-  base: [screen-normal, c-teal]
-GraphZoomFit:
-  base: [screen-full, c-teal]
-
-# Proximity browser
-GraphProximityView:
-  base: [telescope, c-teal]
-GraphNewProximityView:
-  base: [telescope, c-teal]
-  modifier: add
-GraphProximityAddGraph:
-  base: [type-hierarchy, c-teal]
-  modifier: add
-GraphProximityAddNode:
-  base: [circle-large, c-teal]
-  modifier: add
-GraphProximityAddNodeByAddr:
-  base: [location, c-teal]
-  modifier: add
-GraphProximityAddParents:
-  base: [type-hierarchy-super, c-teal]
-  modifier: add
-GraphProximityDelChilds:
-  base: [type-hierarchy-sub, c-teal]
-  modifier: delete
-GraphProximityDelNode:
-  base: [circle-large, c-teal]
-  modifier: delete
-GraphProximityDelParents:
-  base: [type-hierarchy-super, c-teal]
-  modifier: delete
-GraphProximityFindPath:
-  base: [compass, c-teal]
-
-# Breakpoints
-Breakpoints:
-  base: [activate-breakpoints, c-red]
-BreakpointAdd:
-  base: [circle-filled, c-red]
-  modifier: add
-BreakpointDel:
-  base: [circle-filled, c-red]
-  modifier: delete
-BreakpointEdit:
-  base: [circle-filled, c-red]
-  modifier: edit
-BreakpointEnable:
-  base: [circle-filled, c-red]
-  modifier: check
-BreakpointDisable:
-  base: [circle-slash, c-red]
-
-# Debugger: process (run green, pause yellow, stop red, backwards mauve)
-Debugger:
-  base: [debug-alt, c-green]
-ProcessStart:
-  base: [debug-start, c-green]
-ProcessPause:
-  base: [debug-pause, c-yellow]
-ProcessExit:
-  base: [debug-stop, c-red]
-ProcessGoBackwards:
-  base: [debug-reverse-continue, c-mauve]
-
-# Debugger: stepping (forwards blue, backwards mauve)
-ThreadStepInto:
-  base: [debug-step-into, c-blue]
-ThreadStepIntoBackwards:
-  base: [debug-step-into, c-mauve]
-ThreadStepOver:
-  base: [debug-step-over, c-blue]
-ThreadStepOverBackwards:
-  base: [debug-step-back, c-mauve]
-ThreadRunUntilReturn:
-  base: [debug-step-out, c-blue]
-ThreadRunToCursor:
-  base: [cursor, c-blue]
-ThreadRunToCursorBackwards:
-  base: [cursor, c-mauve]
-ThreadSetCurrentIp:
-  base: [target, c-blue]
-  modifier: edit
-
-# Debugger: windows and threads
-Threads:
-  base: [server-process, c-flamingo]
-DebuggerSuspendThread:
-  base: [debug-pause, c-flamingo]
-DebuggerResumeThread:
-  base: [debug-continue, c-flamingo]
-StackTrace:
-  base: [debug-stackframe, c-flamingo]
-StackView:
-  base: [layers-active, c-flamingo]
-ShowRegisters:
-  base: [chip, c-red]
-WatchList:
-  base: [eye, c-sky]
-WatchView:
-  base: [preview, c-sky]
-AddWatch:
-  base: [eye, c-sky]
-  modifier: add
-DelWatch:
-  base: [eye, c-sky]
-  modifier: delete
-
-# Tracing
-TracingWindow:
-  base: [pulse, c-pink]
-ExecTraceAdd:
-  base: [debug-line-by-line, c-pink]
-  modifier: add
-ReadWriteTraceAdd:
-  base: [arrow-swap, c-pink]
-  modifier: add
-WriteTraceAdd:
-  base: [edit, c-pink]
-  modifier: add
-ToggleTraceFunctions:
-  base: [symbol-method, c-pink]
-  modifier: check
-ToggleTraceInstructions:
-  base: [debug-line-by-line, c-pink]
-  modifier: check
-
-# Diff / merge (local = home, remote = cloud)
-DiffPrevChunk:
-  base: [arrow-up, c-mauve]
-DiffNextChunk:
-  base: [arrow-down, c-mauve]
-DiffCenterChunk:
-  base: [target, c-mauve]
-DiffPrevConflict:
-  base: [arrow-up, c-mauve]
-  modifier: warning
-DiffNextConflict:
-  base: [arrow-down, c-mauve]
-  modifier: warning
-DiffApplyHandlerNoConflicts:
-  base: [git-merge, c-mauve]
-  modifier: check
-DiffApplyHandlerPickLocalOnConflict:
-  base: [home, c-mauve]
-  modifier: warning
-DiffApplyHandlerPickRemoteOnConflict:
-  base: [cloud, c-mauve]
-  modifier: warning
-DiffApplyPickLocal:
-  base: [home, c-mauve]
-DiffApplyPickRemote:
-  base: [cloud, c-mauve]
-DiffProceedToTheNextStep:
-  base: [arrow-circle-right, c-mauve]
-DiffToggleBasePanel:
-  base: [layout-panel, c-mauve]
-  modifier: check
-DiffToggleDetails:
-  base: [info, c-mauve]
-  modifier: check
-
-# Icons IDA loads straight from its resources instead of through its icon
-# names. The 9.3 plugin recognised them by their pixels and swapped them at
-# runtime (src/ida/old_chrome_icon_hack.py, not loaded now). Keyed by
-# resource path under ":/", without ".svg".
-swapped:
-  # Local Types rows
-  IDAG/resources/widgets/struct:
+  # Types, structures, enums, constants
+  resources/menu/SetType.svg:
+    base: [symbol-class, c-blue]
+    modifier: edit
+  resources/menu/TilAddType.svg:
+    base: [symbol-class, c-blue]
+    modifier: add
+  resources/menu/TilDelType.svg:
+    base: [symbol-class, c-blue]
+    modifier: delete
+  resources/menu/LocalTypesExportToHeader.svg:
+    base: [symbol-class, c-blue]
+    modifier: down
+  resources/menu/CreateStructFromData.svg:
     base: [symbol-structure, c-blue]
-  IDAG/resources/widgets/union:
-    base: [symbol-structure, c-sapphire]
-  IDAG/resources/widgets/enum:
+    modifier: add
+  resources/menu/ShrinkStruct.svg:
+    base: [symbol-structure, c-blue]
+    modifier: remove
+  resources/menu/DeclareStructVar.svg:
+    base: [symbol-structure, c-lavender]
+  resources/menu/CopyStruct.svg:
+    base: [copy, c-blue]
+  resources/menu/EditFullTypeCopy.svg:
+    base: [copy, c-lavender]
+  resources/menu/AddEnum.svg:
     base: [symbol-enum, c-blue]
-  IDAG/resources/widgets/typedef:
+    modifier: add
+  resources/menu/DelEnum.svg:
+    base: [symbol-enum, c-blue]
+    modifier: delete
+  resources/menu/EditEnum.svg:
+    base: [symbol-enum, c-blue]
+    modifier: edit
+  resources/menu/AddConst.svg:
+    base: [symbol-constant, c-peach]
+    modifier: add
+  resources/menu/DelConst.svg:
+    base: [symbol-constant, c-peach]
+    modifier: delete
+  resources/menu/TilEditConst.svg:
+    base: [symbol-constant, c-peach]
+    modifier: edit
+
+  # Defining code and data
+  resources/menu/MakeCode.svg:
+    base: [code, c-mauve]
+  resources/menu/MakeData.svg:
+    base: [symbol-field, c-peach]
+  resources/menu/MakeArray.svg:
+    base: [symbol-array, c-peach]
+  resources/menu/MakeStrlit.svg:
+    base: [symbol-string, c-green]
+    modifier: add
+  resources/menu/MakeUnknown.svg:
+    base: [eraser, c-overlay2]
+  resources/menu/MakeName.svg:
+    base: [rename, c-lavender]
+  resources/menu/ManualOperand.svg:
+    base: [edit, c-text]
+
+  # Comments and extra lines
+  resources/menu/MakeComment.svg:
+    base: [comment, c-overlay2]
+  resources/menu/MakeRptCmt.svg:
+    base: [comment-discussion, c-overlay2]
+  resources/menu/MakeExtraLineA.svg:
+    base: [keyboard-tab-above, c-overlay2]
+  resources/menu/MakeExtraLineB.svg:
+    base: [keyboard-tab-below, c-overlay2]
+
+  # Operand formats
+  resources/menu/OpNumber.svg:
+    base: [symbol-numeric, c-peach]
+  resources/menu/OpHex.svg:
+    base: [symbol-numeric, c-maroon]
+  resources/menu/OpDecimal.svg:
+    base: [symbol-numeric, c-flamingo]
+  resources/menu/OpOctal.svg:
+    base: [symbol-numeric, c-rosewater]
+  resources/menu/OpBinary.svg:
+    base: [file-binary, c-peach]
+  resources/menu/OpFloat.svg:
+    base: [symbol-ruler, c-peach]
+  resources/menu/OpChar.svg:
+    base: [case-sensitive, c-green]
+  resources/menu/OpEnum.svg:
+    base: [symbol-enum-member, c-blue]
+  resources/menu/OpOffset.svg:
+    base: [link, c-sapphire]
+  resources/menu/OpOffsetCs.svg:
+    base: [link-external, c-sapphire]
+  resources/menu/OpAnyOffset.svg:
+    base: [references, c-sapphire]
+  resources/menu/OpUserOffset.svg:
+    base: [link, c-sapphire]
+    modifier: edit
+  resources/menu/OpStructOffset.svg:
+    base: [symbol-structure, c-sapphire]
+  resources/menu/OpSegment.svg:
+    base: [symbol-namespace, c-sapphire]
+  resources/menu/OpStackVariable.svg:
+    base: [symbol-variable, c-lavender]
+  resources/menu/BitwiseNegate.svg:
+    base: [symbol-operator, c-peach]
+  resources/menu/ChangeSign.svg:
+    base: [symbol-numeric, c-peach]
+    modifier: remove
+  resources/menu/ToggleLeadingZeroes.svg:
+    base: [index-zero, c-overlay2]
+    modifier: check
+
+  # String literal types
+  resources/menu/StringC.svg:
+    base: [quote, c-green]
+  resources/menu/StringDOS.svg:
+    base: [terminal-cmd, c-green]
+  resources/menu/StringDelphi.svg:
+    base: [quotes, c-green]
+  resources/menu/StringPascal1.svg:
+    base: [quotes, c-teal]
+  resources/menu/StringPascal2.svg:
+    base: [quotes, c-sky]
+  resources/menu/StringUnicode.svg:
+    base: [text-size, c-green]
+  resources/menu/StringUnicodePascal2.svg:
+    base: [text-size, c-teal]
+  resources/menu/StringUnicodePascal4.svg:
+    base: [text-size, c-sky]
+
+  # Navigation
+  resources/menu/JumpEnter.svg:
+    base: [arrow-small-right, c-sky]
+  resources/menu/JumpEnterNew.svg:
+    base: [link-external, c-sky]
+  resources/menu/JumpNewDump.svg:
+    base: [file-binary, c-sky]
+    modifier: add
+  resources/menu/JumpToIP.svg:
+    base: [target, c-sky]
+  resources/menu/Return.svg:
+    base: [arrow-left, c-sky]
+  resources/menu/UndoReturn.svg:
+    base: [arrow-right, c-sky]
+  resources/menu/AddressDetails.svg:
+    base: [info, c-sky]
+
+  # Search (down = next)
+  resources/menu/AskBinaryText.svg:
+    base: [file-binary, c-sapphire]
+  resources/menu/JumpBinaryText.svg:
+    base: [file-binary, c-sapphire]
+    modifier: down
+  resources/menu/JumpImmediate.svg:
+    base: [symbol-numeric, c-sapphire]
+  resources/menu/AskNextImmediate.svg:
+    base: [symbol-numeric, c-sapphire]
+    modifier: down
+  resources/menu/JumpText.svg:
+    base: [whole-word, c-sapphire]
+  resources/menu/AskNextText.svg:
+    base: [whole-word, c-sapphire]
+    modifier: down
+  resources/menu/SearchNext.svg:
+    base: [search, c-sapphire]
+    modifier: down
+  resources/menu/SetDirection.svg:
+    base: [arrow-both, c-sapphire]
+  resources/menu/ActinsQuickFilter.svg:
+    base: [filter, c-sapphire]
+
+  # Views and windows
+  resources/menu/OpenSelectors.svg:
+    base: [list-selection, c-sapphire]
+  resources/menu/OpenStackVariables.svg:
+    base: [debug-stackframe, c-lavender]
+  resources/menu/Locals.svg:
+    base: [symbol-variable, c-lavender]
+  resources/menu/OpenXrefsTree.svg:
+    base: [list-tree, c-teal]
+  resources/menu/OpenNotepad.svg:
+    base: [note, c-text]
+  resources/menu/WindowsList.svg:
+    base: [list-unordered, c-text]
+  resources/menu/Modules.svg:
+    base: [package, c-blue]
+  resources/menu/SwitchToSource.svg:
+    base: [file-code, c-text]
+  resources/menu/ToggleSourceDebug.svg:
+    base: [file-code, c-text]
+    modifier: check
+
+  # Showing and hiding
+  resources/menu/Hide.svg:
+    base: [eye-closed, c-subtext0]
+  resources/menu/HideAll.svg:
+    base: [collapse-all, c-subtext0]
+  resources/menu/UnHide.svg:
+    base: [eye, c-subtext0]
+  resources/menu/UnHideAll.svg:
+    base: [expand-all, c-subtext0]
+  resources/menu/DelHiddenRange.svg:
+    base: [eye-closed, c-subtext0]
+    modifier: delete
+  resources/menu/ShowFlags.svg:
+    base: [flag, c-text]
+  # TwoFlags:
+  #   base: [flag, c-text]
+  #   modifier: add
+
+  # Files, databases, desktops (down = save/export, up = load)
+  resources/menu/LoadFile.svg:
+    base: [file, c-text]
+    modifier: up
+  resources/menu/LoadNewFile.svg:
+    base: [folder-opened, c-text]
+  resources/menu/LoadSigFile.svg:
+    base: [library, c-mauve]
+    modifier: up
+  resources/menu/SaveBase.svg:
+    base: [save, c-blue]
+  resources/menu/SaveBaseSnap.svg:
+    base: [save-all, c-blue]
+  resources/menu/TakeSnapshot.svg:
+    base: [device-camera, c-blue]
+  resources/menu/ShowSnapMan.svg:
+    base: [versions, c-blue]
+  resources/menu/DumpDatabase.svg:
+    base: [database, c-blue]
+    modifier: down
+  resources/menu/DumpTypes.svg:
+    base: [file-code, c-blue]
+    modifier: down
+  resources/menu/ProduceAsm.svg:
+    base: [file-code, c-text]
+    modifier: down
+  resources/menu/ProduceHeader.svg:
+    base: [symbol-file, c-text]
+    modifier: down
+  resources/menu/ProduceInc.svg:
+    base: [file-text, c-text]
+    modifier: down
+  resources/menu/ProduceLst.svg:
+    base: [list-ordered, c-text]
+    modifier: down
+  resources/menu/LoadDesktop.svg:
+    base: [layout, c-text]
+    modifier: up
+  resources/menu/SaveDesktop.svg:
+    base: [layout, c-text]
+    modifier: down
+  resources/menu/DeleteDesktop.svg:
+    base: [layout, c-text]
+    modifier: delete
+
+  # Scripts, settings, help
+  resources/menu/Execute.svg:
+    base: [play, c-green]
+  resources/menu/ExecuteLine.svg:
+    base: [debug-console, c-green]
+  resources/menu/RecentScripts.svg:
+    base: [history, c-text]
+  resources/menu/Calculate.svg:
+    base: [percentage, c-teal]
+  resources/menu/Options.svg:
+    base: [settings-gear, c-text]
+  resources/menu/ShortcutEditor.svg:
+    base: [record-keys, c-text]
+  resources/menu/ShowHelp.svg:
+    base: [question, c-sky]
+  resources/menu/EditCopy.svg:
+    base: [copy, c-text]
+  resources/menu/Analysis.svg:
+    base: [beaker, c-teal]
+  resources/menu/Waiting.svg:
+    base: [loading, c-text]
+  resources/menu/QuitIDA.svg:
+    base: [sign-out, c-red]
+
+  # Graphs and charts
+  resources/menu/GraphGraphView.svg:
+    base: [type-hierarchy, c-teal]
+  resources/menu/GraphFlatView.svg:
+    base: [list-flat, c-teal]
+  resources/menu/GraphFunc.svg:
+    base: [type-hierarchy-sub, c-teal]
+  resources/menu/FunctionCallGraph.svg:
+    base: [type-hierarchy-super, c-teal]
+  resources/menu/CallFlow.svg:
+    base: [references, c-teal]
+  resources/menu/ChartXrefsFrom.svg:
+    base: [call-outgoing, c-teal]
+  resources/menu/ChartXrefsTo.svg:
+    base: [call-incoming, c-teal]
+  resources/menu/ChartXrefsUser.svg:
+    base: [graph-line, c-teal]
+    modifier: edit
+  resources/menu/GraphOverview.svg:
+    base: [map, c-teal]
+  resources/menu/GraphLayout.svg:
+    base: [editor-layout, c-teal]
+  resources/menu/GraphOrthogonalLayout.svg:
+    base: [table, c-teal]
+  resources/menu/GraphGroup.svg:
+    base: [group-by-ref-type, c-teal]
+  resources/menu/GraphUngroup.svg:
+    base: [ungroup-by-ref-type, c-teal]
+  resources/menu/GraphColor.svg:
+    base: [paintcan, c-teal]
+  resources/menu/GraphSetupColors.svg:
+    base: [symbol-color, c-teal]
+  resources/menu/GraphSetupOptions.svg:
+    base: [settings-gear, c-teal]
+  resources/menu/GraphPrint.svg:
+    base: [file-pdf, c-teal]
+  resources/menu/GraphZoom100.svg:
+    base: [screen-normal, c-teal]
+  resources/menu/GraphZoomFit.svg:
+    base: [screen-full, c-teal]
+
+  # Proximity browser
+  resources/menu/GraphProximityView.svg:
+    base: [telescope, c-teal]
+  resources/menu/GraphNewProximityView.svg:
+    base: [telescope, c-teal]
+    modifier: add
+  resources/menu/GraphProximityAddGraph.svg:
+    base: [type-hierarchy, c-teal]
+    modifier: add
+  resources/menu/GraphProximityAddNode.svg:
+    base: [circle-large, c-teal]
+    modifier: add
+  resources/menu/GraphProximityAddNodeByAddr.svg:
+    base: [location, c-teal]
+    modifier: add
+  resources/menu/GraphProximityAddParents.svg:
+    base: [type-hierarchy-super, c-teal]
+    modifier: add
+  resources/menu/GraphProximityDelChilds.svg:
+    base: [type-hierarchy-sub, c-teal]
+    modifier: delete
+  resources/menu/GraphProximityDelNode.svg:
+    base: [circle-large, c-teal]
+    modifier: delete
+  resources/menu/GraphProximityDelParents.svg:
+    base: [type-hierarchy-super, c-teal]
+    modifier: delete
+  resources/menu/GraphProximityFindPath.svg:
+    base: [compass, c-teal]
+
+  # Breakpoints
+  resources/menu/Breakpoints.svg:
+    base: [activate-breakpoints, c-red]
+  resources/menu/BreakpointAdd.svg:
+    base: [circle-filled, c-red]
+    modifier: add
+  resources/menu/BreakpointDel.svg:
+    base: [circle-filled, c-red]
+    modifier: delete
+  resources/menu/BreakpointEdit.svg:
+    base: [circle-filled, c-red]
+    modifier: edit
+  resources/menu/BreakpointEnable.svg:
+    base: [circle-filled, c-red]
+    modifier: check
+  resources/menu/BreakpointDisable.svg:
+    base: [circle-slash, c-red]
+
+  # Debugger: process (run green, pause yellow, stop red, backwards mauve)
+  resources/menu/Debugger.svg:
+    base: [debug-alt, c-green]
+  resources/menu/ProcessStart.svg:
+    base: [debug-start, c-green]
+  resources/menu/ProcessPause.svg:
+    base: [debug-pause, c-yellow]
+  resources/menu/ProcessExit.svg:
+    base: [debug-stop, c-red]
+  resources/menu/ProcessGoBackwards.svg:
+    base: [debug-reverse-continue, c-mauve]
+
+  # Debugger: stepping (forwards blue, backwards mauve)
+  resources/menu/ThreadStepInto.svg:
+    base: [debug-step-into, c-blue]
+  resources/menu/ThreadStepIntoBackwards.svg:
+    base: [debug-step-into, c-mauve]
+  resources/menu/ThreadStepOver.svg:
+    base: [debug-step-over, c-blue]
+  resources/menu/ThreadStepOverBackwards.svg:
+    base: [debug-step-back, c-mauve]
+  resources/menu/ThreadRunUntilReturn.svg:
+    base: [debug-step-out, c-blue]
+  resources/menu/ThreadRunToCursor.svg:
+    base: [cursor, c-blue]
+  resources/menu/ThreadRunToCursorBackwards.svg:
+    base: [cursor, c-mauve]
+  resources/menu/ThreadSetCurrentIp.svg:
+    base: [target, c-blue]
+    modifier: edit
+
+  # Debugger: windows and threads
+  resources/menu/Threads.svg:
+    base: [server-process, c-flamingo]
+  resources/menu/DebuggerSuspendThread.svg:
+    base: [debug-pause, c-flamingo]
+  resources/menu/DebuggerResumeThread.svg:
+    base: [debug-continue, c-flamingo]
+  resources/menu/StackTrace.svg:
+    base: [debug-stackframe, c-flamingo]
+  resources/menu/StackView.svg:
+    base: [layers-active, c-flamingo]
+  resources/menu/ShowRegisters.svg:
+    base: [chip, c-red]
+  resources/menu/WatchList.svg:
+    base: [eye, c-sky]
+  resources/menu/WatchView.svg:
+    base: [preview, c-sky]
+  resources/menu/AddWatch.svg:
+    base: [eye, c-sky]
+    modifier: add
+  resources/menu/DelWatch.svg:
+    base: [eye, c-sky]
+    modifier: delete
+
+  # Tracing
+  resources/menu/TracingWindow.svg:
+    base: [pulse, c-pink]
+  resources/menu/ExecTraceAdd.svg:
+    base: [debug-line-by-line, c-pink]
+    modifier: add
+  resources/menu/ReadWriteTraceAdd.svg:
+    base: [arrow-swap, c-pink]
+    modifier: add
+  resources/menu/WriteTraceAdd.svg:
+    base: [edit, c-pink]
+    modifier: add
+  resources/menu/ToggleTraceFunctions.svg:
+    base: [symbol-method, c-pink]
+    modifier: check
+  resources/menu/ToggleTraceInstructions.svg:
+    base: [debug-line-by-line, c-pink]
+    modifier: check
+
+  # Diff / merge (local = home, remote = cloud)
+  resources/menu/DiffPrevChunk.svg:
+    base: [arrow-up, c-mauve]
+  resources/menu/DiffNextChunk.svg:
+    base: [arrow-down, c-mauve]
+  resources/menu/DiffCenterChunk.svg:
+    base: [target, c-mauve]
+  resources/menu/DiffPrevConflict.svg:
+    base: [arrow-up, c-mauve]
+    modifier: warning
+  resources/menu/DiffNextConflict.svg:
+    base: [arrow-down, c-mauve]
+    modifier: warning
+  resources/menu/DiffApplyHandlerNoConflicts.svg:
+    base: [git-merge, c-mauve]
+    modifier: check
+  resources/menu/DiffApplyHandlerPickLocalOnConflict.svg:
+    base: [home, c-mauve]
+    modifier: warning
+  resources/menu/DiffApplyHandlerPickRemoteOnConflict.svg:
+    base: [cloud, c-mauve]
+    modifier: warning
+  resources/menu/DiffApplyPickLocal.svg:
+    base: [home, c-mauve]
+  resources/menu/DiffApplyPickRemote.svg:
+    base: [cloud, c-mauve]
+  resources/menu/DiffProceedToTheNextStep.svg:
+    base: [arrow-circle-right, c-mauve]
+  resources/menu/DiffToggleBasePanel.svg:
+    base: [layout-panel, c-mauve]
+    modifier: check
+  resources/menu/DiffToggleDetails.svg:
+    base: [info, c-mauve]
+    modifier: check
+
+  # ------------------------------------------------------------------
+  # Not in the 9.3 config
+  # ------------------------------------------------------------------
+
+  # Local Types rows (were `swapped`; struct is above)
+  resources/widgets/union.svg:
+    base: [symbol-structure, c-sapphire]
+  resources/widgets/enum.svg:
+    base: [symbol-enum, c-blue]
+  resources/widgets/typedef.svg:
     base: [symbol-class, c-blue]
   # Forward declarations: same shapes, dimmed
-  IDAG/resources/widgets/fwdstruct:
+  resources/widgets/fwdstruct.svg:
     base: [symbol-structure, c-overlay2]
-  IDAG/resources/widgets/fwdunion:
+  resources/widgets/fwdunion.svg:
     base: [symbol-structure, c-overlay2]
-  IDAG/resources/widgets/fwdenum:
+  resources/widgets/fwdenum.svg:
     base: [symbol-enum, c-overlay2]
-  # String types (Strings window); not yet compared with the originals
-  IDAG/resources/widgets/strchoose_0:
+  # Status markers in choosers (named strchoose_*, but not string types):
+  # what each original shows. strchoose_0 is empty: left alone
+  resources/widgets/strchoose_1.svg:  # selected radio
+    base: [record, c-text]
+  resources/widgets/strchoose_2.svg:  # empty ring
+    base: [circle-large, c-text]
+  resources/widgets/strchoose_3.svg:  # green check
+    base: [check, c-green]
+  resources/widgets/strchoose_4.svg:  # red cross
+    base: [close, c-red]
+  resources/widgets/strchoose_5.svg:  # question mark
+    base: [question, c-teal]
+  resources/widgets/strchoose_6.svg:  # graph, refresh arrow
+    base: [type-hierarchy, c-mauve]
+    modifier: sync
+  resources/widgets/strchoose_7.svg:  # green S
     base: [symbol-string, c-green]
-  IDAG/resources/widgets/strchoose_1:
-    base: [symbol-string, c-green]
-  IDAG/resources/widgets/strchoose_2:
-    base: [symbol-string, c-green]
-  IDAG/resources/widgets/strchoose_3:
-    base: [symbol-string, c-green]
-  IDAG/resources/widgets/strchoose_4:
-    base: [symbol-string, c-green]
-  IDAG/resources/widgets/strchoose_5:
-    base: [symbol-string, c-green]
-  IDAG/resources/widgets/strchoose_6:
-    base: [symbol-string, c-green]
-  IDAG/resources/widgets/strchoose_7:
-    base: [symbol-string, c-green]
-  # List filter bar buttons
-  libui/resources/chooser_widget/close_quick_filter:
-    base: [close, c-overlay2]
-  libui/resources/chooser_widget/refresh:
+
+  # Other widget icons
+  resources/widgets/image.svg:  # three bars
+    base: [list-flat, c-text]
+  resources/widgets/region.svg:  # two dots joined by a line
+    base: [symbol-ruler, c-text]
+  resources/widgets/tinted/TwoFlags.svg:  # ShowFeatureFlags
+    base: [milestone, c-peach]
+  resources/widgets/tinted/link.svg:  # CopyLink, JumpIdaLink
+    base: [link, c-blue]
+  resources/widgets/tinted/drag_handle.svg:
+    base: [gripper, c-overlay2]
+  resources/widgets/tinted/examples.svg:
+    base: [book, c-text]
+  resources/widgets/tinted/scripts.svg:
+    base: [file-code, c-text]
+  resources/widgets/tinted/search.svg:
+    base: [search, c-text]
+  resources/widgets/tinted/snippets.svg:
+    base: [symbol-snippet, c-text]
+
+  # New in 9.4
+  resources/menu/JumpTo.svg:  # enter-key arrow
+    base: [debug-step-into, c-blue]
+  resources/menu/OpenPathfinder.svg:  # OpenPathfinder
+    base: [search, c-teal]
+  resources/menu/SetDirectionUp.svg:  # SetDirection is arrow-both
+    base: [arrow-up, c-sapphire]
+
+  # Numbered icons: no action shows them (rows, markers, dialogs), so the
+  # designs follow what the originals look like
+  resources/menu/1.svg:  # bold B
+    base: [bold, c-text]
+  resources/menu/18.svg:  # plus
+    base: [add, c-text]
+  resources/menu/28.svg:  # U
+    base: [text-size, c-text]
+  resources/menu/34.svg:  # red cross
+    base: [close, c-red]
+  resources/menu/43.svg:  # glasses, sparkle
+    base: [eye, c-yellow]
+  resources/menu/59.svg:  # red ball
+    base: [circle-large-filled, c-red]
+  resources/menu/60.svg:  # yellow ball
+    base: [circle-large-filled, c-yellow]
+  resources/menu/62.svg:  # red no-entry
+    base: [circle-slash, c-red]
+  resources/menu/65.svg:  # new note
+    base: [new-file, c-yellow]
+  resources/menu/67.svg:  # down triangle
+    base: [triangle-down, c-text]
+  resources/menu/68.svg:  # up triangle
+    base: [triangle-up, c-text]
+  resources/menu/70.svg:  # stacked windows
+    base: [layers, c-text]
+  resources/menu/73.svg:  # cyan note
+    base: [note, c-sky]
+  resources/menu/74.svg:  # info page
+    base: [info, c-blue]
+  resources/menu/75.svg:  # page, green arrow
+    base: [go-to-file, c-green]
+  resources/menu/76.svg:  # page with A
+    base: [file-text, c-green]
+  resources/menu/79.svg:  # D
+    base: [file-binary, c-blue]
+  resources/menu/81.svg:  # page with f
+    base: [file-code, c-blue]
+  resources/menu/82.svg:  # green page with f
+    base: [file-code, c-green]
+  resources/menu/86.svg:  # back arrow
+    base: [reply, c-blue]
+  resources/menu/96.svg:  # window, lightning
+    base: [window, c-peach]
+  resources/menu/97.svg:  # window split in rows
+    base: [split-vertical, c-text]
+  resources/menu/98.svg:  # window split in columns
+    base: [split-horizontal, c-text]
+  resources/menu/99.svg:  # window, arrow
+    base: [screen-normal, c-text]
+  resources/menu/100.svg:  # table
+    base: [table, c-sapphire]
+  resources/menu/110.svg:  # highlighter, lock
+    base: [lock, c-yellow]
+  resources/menu/119.svg:  # page with f, arrow
+    base: [symbol-method, c-yellow]
+    modifier: sync
+  resources/menu/133.svg:  # orange dot, list
+    base: [list-unordered, c-peach]
+  resources/menu/144.svg:  # 2 1 0 -> f
+    base: [list-ordered, c-red]
+  resources/menu/145.svg:  # 2 1 0, f loop
+    base: [list-ordered, c-red]
+    modifier: sync
+  resources/menu/146.svg:  # 2 1 0, list with a red dot
+    base: [list-ordered, c-maroon]
+  resources/menu/159.svg:  # hand
+    base: [stop-circle, c-yellow]
+  resources/menu/160.svg:  # teal speech drop
+    base: [comment, c-teal]
+  resources/menu/161.svg:  # dotted rectangle
+    base: [inspect, c-mauve]
+  resources/menu/171.svg:  # lightning
+    base: [symbol-event, c-yellow]
+  resources/menu/174.svg:  # highlighter
+    base: [paintcan, c-yellow]
+  resources/menu/175.svg:  # grey cross in a circle
+    base: [error, c-overlay2]
+  resources/menu/177.svg:  # blue dot
+    base: [circle-small-filled, c-blue]
+  resources/menu/178.svg:  # black dot
+    base: [circle-small-filled, c-text]
+  resources/menu/179.svg:  # cyan dot
+    base: [circle-small-filled, c-sky]
+  resources/menu/181.svg:  # funnel, corner
+    base: [filter-filled, c-sapphire]
+  resources/menu/182.svg:  # puzzle piece
+    base: [extensions, c-blue]
+  resources/menu/183.svg:  # plug
+    base: [plug, c-text]
+  resources/menu/185.svg:  # colour swatches, clock
+    base: [symbol-color, c-peach]
+  resources/menu/199.svg:  # glasses, fire
+    base: [eye, c-red]
+  resources/menu/201.svg:  # Python
+    base: [python, c-yellow]
+  resources/menu/202.svg:  # face (Lumina)
+    base: [sparkle, c-mauve]
+  resources/menu/203.svg:  # recycle arrows
+    base: [sync, c-green]
+  resources/menu/205.svg:  # blue f
+    base: [symbol-method, c-blue]
+  resources/menu/217.svg:  # stacked windows
+    base: [multiple-windows, c-text]
+  # 172.svg is empty: left alone
+
+  # Teams / vault (HVUI): sites = server, users = person, worklists =
+  # checklist, files = file; local = home, remote = cloud
+  resources/icons/widgets/commits_widget.svg:
+    base: [git-commit, c-green]
+  resources/icons/widgets/file_history_widget.svg:
+    base: [history, c-lavender]
+  resources/icons/widgets/local_files_widget.svg:
+    base: [file, c-text]
+  resources/icons/widgets/log_widget.svg:
+    base: [output, c-text]
+  resources/icons/widgets/sites_widget.svg:
+    base: [server, c-sapphire]
+  resources/icons/widgets/users_widget.svg:
+    base: [person, c-blue]
+  resources/icons/widgets/vault_files_widget.svg:
+    base: [database, c-sapphire]
+  resources/icons/widgets/worklists_widget.svg:
+    base: [checklist, c-lavender]
+  resources/icons/actions/add_site.svg:
+    base: [server, c-sapphire]
+    modifier: add
+  resources/icons/actions/add_user.svg:
+    base: [person, c-blue]
+    modifier: add
+  resources/icons/actions/add_worklist.svg:
+    base: [checklist, c-lavender]
+    modifier: add
+  resources/icons/actions/checkout_for_add.svg:
+    base: [file, c-text]
+    modifier: add
+  resources/icons/actions/checkout_for_copy.svg:
+    base: [copy, c-text]
+  resources/icons/actions/checkout_for_delete.svg:
+    base: [file, c-text]
+    modifier: delete
+  resources/icons/actions/checkout_for_edit.svg:
+    base: [file, c-text]
+    modifier: edit
+  resources/icons/actions/checkout_for_move_rename.svg:
+    base: [file-symlink-file, c-peach]
+  resources/icons/actions/convert_to_I64.svg:  # checkout_for_cvt64
+    base: [file-binary, c-text]
+    modifier: sync
+  resources/icons/actions/commit_worklist.svg:
+    base: [checklist, c-green]
+    modifier: up
+  resources/icons/actions/delete_file.svg:
+    base: [file, c-text]
+    modifier: delete
+  resources/icons/actions/delete_site.svg:
+    base: [server, c-sapphire]
+    modifier: delete
+  resources/icons/actions/delete_user.svg:
+    base: [person, c-blue]
+    modifier: delete
+  resources/icons/actions/delete_worklist.svg:
+    base: [checklist, c-lavender]
+    modifier: delete
+  resources/icons/actions/diff.svg:  # diff_any
+    base: [diff, c-peach]
+  resources/icons/actions/diff_prev.svg:
+    base: [git-compare, c-peach]
+  resources/icons/actions/diff_vault_local.svg:
+    base: [diff-multiple, c-peach]
+  resources/icons/actions/edit_site.svg:
+    base: [server, c-sapphire]
+    modifier: edit
+  resources/icons/actions/edit_user.svg:
+    base: [person, c-blue]
+    modifier: edit
+  resources/icons/actions/edit_worklist.svg:
+    base: [checklist, c-lavender]
+    modifier: edit
+  resources/icons/actions/file_history.svg:
+    base: [history, c-lavender]
+  resources/icons/actions/find_in_vault.svg:
+    base: [search, c-teal]
+  resources/icons/actions/find_in_vault_next.svg:
+    base: [search, c-teal]
+    modifier: down
+  resources/icons/actions/find_in_vault_prev.svg:
+    base: [search, c-teal]
+    modifier: up
+  resources/icons/actions/get_revision.svg:
+    base: [cloud-download, c-sapphire]
+  resources/icons/actions/help.svg:
+    base: [question, c-blue]
+  resources/icons/actions/logoff.svg:
+    base: [debug-disconnect, c-red]
+  resources/icons/actions/logon.svg:
+    base: [plug, c-green]
+  resources/icons/actions/migrate_file_to_worklist.svg:
+    base: [checklist, c-lavender]
+    modifier: sync
+  resources/icons/actions/open_commit_files.svg:
+    base: [files, c-text]
+  resources/icons/actions/open_commits_widget.svg:
+    base: [git-commit, c-green]
+  resources/icons/actions/open_containing_folder.svg:
+    base: [folder-opened, c-yellow]
+  resources/icons/actions/open_file.svg:
+    base: [go-to-file, c-text]
+  resources/icons/actions/open_local_files_widget.svg:
+    base: [file, c-text]
+  resources/icons/actions/open_log_widget.svg:
+    base: [output, c-text]
+  resources/icons/actions/open_sites_widget.svg:
+    base: [server, c-sapphire]
+  resources/icons/actions/open_users_widget.svg:
+    base: [person, c-blue]
+  resources/icons/actions/open_vault_files_widget.svg:
+    base: [database, c-sapphire]
+  resources/icons/actions/open_worklists_widget.svg:
+    base: [checklist, c-lavender]
+  resources/icons/actions/quit_hvui.svg:
+    base: [sign-out, c-red]
+  resources/icons/actions/rebuild_tree_structure.svg:
     base: [refresh, c-text]
+  resources/icons/actions/resolve_auto.svg:
+    base: [git-merge, c-green]
+  resources/icons/actions/resolve_interactive.svg:
+    base: [git-merge, c-yellow]
+  resources/icons/actions/resolve_prefer_local.svg:
+    base: [home, c-blue]
+  resources/icons/actions/resolve_prefer_remote.svg:
+    base: [cloud, c-blue]
+  resources/icons/actions/resolve_use_local.svg:
+    base: [home, c-peach]
+  resources/icons/actions/resolve_use_remote.svg:
+    base: [cloud, c-peach]
+  resources/icons/actions/revert.svg:
+    base: [discard, c-maroon]
+  resources/icons/actions/revert_if_unchanged.svg:
+    base: [discard, c-maroon]
+    modifier: check
+  resources/icons/actions/scan_and_commit.svg:  # commit, scan
+    base: [git-commit, c-green]
+    modifier: sync
+  resources/icons/actions/show_all_worklists.svg:
+    base: [checklist, c-lavender]
+    modifier: check
+  resources/icons/actions/show_deleted_files.svg:
+    base: [trash, c-overlay2]
+    modifier: check
+  resources/icons/actions/show_ignored_files.svg:
+    base: [eye-closed, c-overlay2]
+    modifier: check
+  resources/icons/actions/sites_chooser_use_site.svg:
+    base: [server, c-sapphire]
+    modifier: check
+  resources/icons/actions/sync_to_commit.svg:  # get_revision_with_options
+    base: [git-commit, c-sapphire]
+    modifier: down
+  resources/icons/actions/sync_to_revision.svg:
+    base: [versions, c-sapphire]
+    modifier: down
+  resources/icons/actions/view_revision.svg:
+    base: [versions, c-lavender]
+  resources/icons/actions/view_worklist.svg:
+    base: [checklist, c-lavender]
 
-# Dock window icons: window title -> the icon (one of the names above) shown in
-# its tab, header and title bar. IDA draws these from its own icon table, so
-# the plugin sets them by title. A trailing * matches any suffix (IDA View-A).
-# Values may also be plugin/<name> for an icon in the `plugin` section.
-windows:
-  "IDA View*": WindowOpen
-  "Hex View*": ToggleDump
-  Exports: OpenExports
-  Imports: OpenImports
-  Names: OpenNames
-  Functions: OpenFunctions
-  Strings: OpenStrings
-  Segments: OpenSegments
-  Segment Registers: OpenSegmentRegisters
-  Signatures: OpenSignatures
-  Type Libraries: OpenTypeLibraries
-  Local Types: OpenLocalTypes
-  "Xref Graph*": OpenXrefs
-  Bookmarks: Bookmarks
-  Problems: OpenProblems
-  Patched bytes: PatchedBytes
-  Undo history: ShowUndoHistory
-  Output: OutputWindow
-  "Output window": OutputWindow
-  "Pseudocode*": plugin/window-pseudocode
-  "Microcode*": plugin/window-microcode
-
-# Icons IDA has no named icon for (used by the plugin and the CSS), built to
-# icons/plugin/<name>.svg
-plugin:
-  # Close button in dock window headers and tabs (also QTabBar::close-button)
-  window-close:
+  # Extra icons IDA has no resource for (used by the plugin and the CSS):
+  # built to extra/<name>.svg like any other path
+  extra/window-close.svg:  # dock header and tab close buttons (also QTabBar::close-button)
     base: [close, c-subtext0]
-  # Fullscreen and Float buttons in dock window headers
-  window-fullscreen:
+  extra/window-fullscreen.svg:  # dock header Fullscreen button
     base: [screen-full, c-subtext0]
-  window-float:
+  extra/window-float.svg:  # dock header Float button
     base: [multiple-windows, c-subtext0]
-  # Decompiler windows (IDA's icons for these are unnamed)
-  window-pseudocode:
-    base: [code, c-mauve]
-  window-microcode:
+  extra/window-microcode.svg:  # Microcode* windows (IDA's icon is unnamed)
     base: [chip, c-peach]
+
+# Dock window icons: window title -> the path of an icon in `icons` above,
+# shown in its tab, header, title bar and Windows menu entry. IDA draws these
+# from its own icon table, so the plugin sets them by title. A trailing *
+# matches any suffix (IDA View-A).
+windows:
+  "IDA View*": resources/menu/WindowOpen.svg
+  "Hex View*": resources/menu/ToggleDump.svg
+  Exports: resources/menu/OpenExports.svg
+  Imports: resources/menu/OpenImports.svg
+  Names: resources/menu/OpenNames.svg
+  Functions: resources/menu/OpenFunctions.svg
+  Strings: resources/menu/OpenStrings.svg
+  Segments: resources/menu/OpenSegments.svg
+  Segment Registers: resources/menu/OpenSegmentRegisters.svg
+  Signatures: resources/menu/OpenSignatures.svg
+  Type Libraries: resources/menu/OpenTypeLibraries.svg
+  Local Types: resources/menu/OpenLocalTypes.svg
+  "Xref Graph*": resources/menu/OpenXrefs.svg
+  Bookmarks: resources/menu/Bookmarks.svg
+  Problems: resources/menu/OpenProblems.svg
+  Patched bytes: resources/menu/PatchedBytes.svg
+  Undo history: resources/menu/ShowUndoHistory.svg
+  Output: resources/menu/OutputWindow.svg
+  "Output window": resources/menu/OutputWindow.svg
+  "Pseudocode*": resources/menu/Pseudocode.svg
+  "Microcode*": extra/window-microcode.svg

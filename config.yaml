@@ -437,10 +437,6 @@ roles:
       selected-fg: d-fg
 
   ida-view:
-    # Line number bar of the pseudocode view (line_number_margin_t), like the lists
-    line-numbers:
-      bg: d-list
-
     # Listing gutter: address prefix, opcode bytes, jump arrows
     gutter:
       line-fg:

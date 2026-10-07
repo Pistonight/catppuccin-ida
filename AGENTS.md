@@ -47,7 +47,8 @@ Full build: `./x build` (`scripts/build` / `build.ps1`) runs `check-css`, `build
 
 ```
 config.yaml              colours: palette, tints, definitions, roles
-config-icons-ida.yaml    `icons`: icon path (from src/ida/icon_meta.yaml) -> codicon base, colour, modifier
+config-icons-ida.yaml    `icons`: icon path (from src/ida/icon_meta.yaml, or extra/<name>.svg) -> codicon base,
+                         colour, modifier; `windows`: dock window title -> icon path
 src/
   main_ida.py            IDA plugin entry (PLUGIN_ENTRY); merges the parts below
   ida/                   IDA plugin modules, imported as `ida.<name>`
@@ -56,6 +57,7 @@ src/
     chrome_icon_resources.py  IconResources: IDA's icon resources by path, the theme's versions
     chrome_action_icons.py    ActionIcons: toolbar/menu icons, set on the actions
     chrome_icon_swap.py       IconSwap: list row icons, recognised by pixels
+    chrome_window_icons.py    WindowIcons: dock window icons by title, header buttons by tooltip
     chrome_faded_disabled_icons.py  FadedDisabledIcons: disabled icons faded, not greyed
     icon_meta.yaml       icons IDA's actions show (from dump-icons); icon_meta_gen.py is built from it
     old_chrome_icon_hack.py  IDA 9.3 list row / dock window icon swaps; not imported, kept for reference
@@ -178,23 +180,24 @@ The generated definitions block goes first in `theme.css` (with
   Lookup tables are built per screen scale (not known yet when the plugin
   loads) from the 1 s refresh, in slices of at most `TABLE_SLICE_MS`: built
   in one go it took ~260 ms and froze IDA (a white flash) on the first list.
-- Dock window icons were matched by window title instead (`_WindowIcons`,
-  also in `src/ida/old_chrome_icon_hack.py`):
-  the `windows` section of `config-icons-ida.yaml` maps titles (trailing `*`
-  = any suffix) to icon names, generated into `src/icons_gen.py` (no longer
-  built; the file is excluded from pyright). They are
-  set on `IDADockWidget` (window icon), `DockTabBar` tabs (tabbed docks) and
-  painted over the icon label of `DockWidgetTitle` (header of a dock alone in
-  its area); the Close / Fullscreen / Float buttons of both `DockWidgetTitle`
-  and `DockAreaDragTitle` (header of an area of tabbed docks), matched by
-  tooltip (`DOCK_BUTTON_ICONS`), get `plugin/window-*.svg`; tab close
-  buttons get it from `QTabBar::close-button` in `icons_indicator.css`. IDA
-  re-applies its icons, so tab bars and buttons are fixed up on every paint.
-  The `plugin` section builds icons IDA has no name for into `icons/plugin/`;
-  `windows` values can name them as `plugin/<name>` (e.g. Pseudocode-A).
-  Entries in the Windows menu (a `QMenu` titled "Windows", entries named
-  after the window titles) are fixed up on its Show event, after IDA refills
-  it.
+- Dock window icons (`WindowIcons` in `src/ida/chrome_window_icons.py`) are
+  matched by window title: the `windows` section of `config-icons-ida.yaml`
+  maps titles (trailing `*` = any suffix) to icon paths in `icons`, generated
+  into `src/ida/window_icons_gen.py`. They are set on `IDADockWidget`
+  (window icon), `DockTabBar` tabs (tabbed docks) and painted over the icon
+  label of `DockWidgetTitle` (header of a dock alone in its area); the Close /
+  Fullscreen / Float buttons of both `DockWidgetTitle` and
+  `DockAreaDragTitle` (header of an area of tabbed docks), matched by tooltip
+  (`DOCK_BUTTON_ICONS`), get `extra/window-*.svg`; tab close buttons get it
+  from `QTabBar::close-button` in `icons_indicator.css`. IDA re-applies its
+  icons, so tab bars and buttons are fixed up on every paint. Entries in the
+  Windows menu (a `QMenu` titled "Windows", entries named after the window
+  titles) are fixed up on its Show event, after IDA refills it. Docks are
+  looked for after the `widget_visible` / `widget_invisible` /
+  `current_widget_changed` UI hooks, or every `DOCK_SCAN_FALLBACK_S` (2 s).
+- `extra/<name>.svg` entries in `icons` are icons IDA has no resource for
+  (dock header buttons, Microcode window); the build accepts them without a
+  metadata entry, and `test-icons-ida` shows them in their own section.
 
 ## Plugin
 

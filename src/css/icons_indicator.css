@@ -40,5 +40,5 @@ QMenu::indicator:exclusive:checked
 
 QTabBar::close-button
 {
-    image: url("$RELPATH/icons/plugin/window-close.svg");
+    image: url("$RELPATH/extra/window-close.svg");
 }
