@@ -2,6 +2,7 @@
 
 import base64
 import html
+import mimetypes
 
 from common.config import colors, load_config
 
@@ -44,12 +45,14 @@ def find_svgs(folder):
 def write_page(svgs, title, out):
     """Write an HTML page showing `svgs` ([(label, path)]) at 16px and 64px,
     on the palette's base colour. Each SVG is embedded as a data: URI image,
-    so styles inside one SVG cannot leak into another."""
+    so styles inside one SVG cannot leak into another. Other images (.png)
+    work too."""
     palette = colors(load_config())
     tiles = []
     for label, path in svgs:
         data = base64.b64encode(path.read_bytes()).decode("ascii")
-        tiles.append(TILE.format(uri="data:image/svg+xml;base64," + data, name=html.escape(label)))
+        mime = mimetypes.guess_type(path.name)[0] or "image/svg+xml"
+        tiles.append(TILE.format(uri="data:%s;base64,%s" % (mime, data), name=html.escape(label)))
     page = PAGE.format(title=html.escape(title), bg=palette["base"], fg=palette["text"],
                        count=len(svgs), tiles="\n".join(tiles))
     out.parent.mkdir(parents=True, exist_ok=True)

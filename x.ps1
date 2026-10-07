@@ -49,7 +49,7 @@ foreach ($a in $args) {
 }
 
 foreach ($step in $steps) {
-    if ($steps.Count -gt 1) { Write-Host "==> $($step.Name)" }
+    if ($steps.Count -gt 1) { Write-Host "==> $($step.Name)" -ForegroundColor Green }
     $rest = $step.Args
     $path = Get-ScriptPath $step.Name
     if ($path.EndsWith(".ps1")) {
@@ -67,7 +67,7 @@ foreach ($step in $steps) {
         $status = $LASTEXITCODE
     }
     if ($status -ne 0) {
-        if ($steps.Count -gt 1) { Write-Host "==> $($step.Name) failed (exit $status); stopping" }
+        if ($steps.Count -gt 1) { Write-Host "==> $($step.Name) failed (exit $status); stopping" -ForegroundColor Red }
         exit $status
     }
 }

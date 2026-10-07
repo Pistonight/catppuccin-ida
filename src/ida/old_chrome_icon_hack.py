@@ -1,6 +1,6 @@
 """
 IDA 9.3 icon workarounds, formerly in chrome.py. Not imported by the plugin
-(main.py), so not bundled; kept for reference while icons are redone for 9.4.
+(main_ida.py), so not bundled; kept for reference while icons are redone for 9.4.
 
 - list row icons: the theme's themeicon properties only reached actions; list
   rows (Functions, Local Types, ...) get their icons from IDA's icon table or
@@ -29,7 +29,7 @@ from PySide6.QtGui import QIcon, QImage, QPainter
 from PySide6.QtWidgets import (QAbstractButton, QAbstractItemView, QApplication, QHeaderView,
                                QLabel, QMenu, QStyle, QStyledItemDelegate, QTabBar)
 
-from chrome import _app
+from ida.chrome import _app
 from icons_gen import WINDOW_CLOSE_ICON, WINDOW_FLOAT_ICON, WINDOW_FULLSCREEN_ICON, WINDOW_ICONS
 from perf import perf
 

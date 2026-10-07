@@ -5,7 +5,7 @@
 # extracted by scripts/extract-modifiers.py). Colours refer to config.yaml
 # (c- colours or d- definitions).
 
-# Modifiers always use the same colour
+# Modifiers always use the same color
 modifiers:
   add: c-green  # add, create
   delete: c-red  # delete
@@ -16,6 +16,92 @@ modifiers:
   sync: c-sky  # change
   down: c-sapphire  # save / export / search next
   up: c-sapphire  # load / import
+
+# Mapped icons from the metadata
+icons:
+  # Git / Teams (mapped by action; IDA's originals are
+  # :/HVUI/resources/icons/git/git_*.svg)
+  action_ids/657.svg:  # GitGetProject (clone)
+    base: [repo-clone, c-blue]
+  action_ids/658.svg:  # GitSaveAndCommit
+    base: [git-commit, c-green]
+  action_ids/659.svg:  # GitNewProject (create repo)
+    base: [repo, c-blue]
+    modifier: add
+  action_ids/660.svg:  # GitHistory
+    base: [history, c-lavender]
+  action_ids/661.svg:  # LearnAboutTeams
+    base: [mortar-board, c-mauve]
+  action_ids/662.svg:  # GitLocalChanges
+    base: [diff, c-peach]
+  action_ids/663.svg:  # GitManageRepos
+    base: [repo, c-blue]
+    modifier: edit
+  action_ids/664.svg:  # GitPull, GitPullRepo, GitChooserPullRepo
+    base: [repo-pull, c-sapphire]
+  action_ids/665.svg:  # GitPush, GitChooserPushRepo
+    base: [repo-push, c-sapphire]
+  action_ids/666.svg:  # GitInitProject (reconfigure repo)
+    base: [repo, c-blue]
+    modifier: sync
+  action_ids/667.svg:  # GitRevert
+    base: [discard, c-maroon]
+  action_ids/668.svg:  # GitAccount
+    base: [account, c-blue]
+
+  resources/icons/actions/add_file.svg:
+    base: [symbol-method, c-yellow]
+
+  # Dock windows (the old `windows` section: window title -> icon), designs
+  # copied from the old top-level entries. Also the icons of the actions
+  # opening them.
+  resources/menu/WindowOpen.svg:  # IDA View*
+    base: [multiple-windows, c-text]
+  resources/menu/ToggleDump.svg:  # Hex View*
+    base: [file-binary, c-text]
+    modifier: check
+  resources/menu/OpenExports.svg:  # Exports
+    base: [export, c-lavender]
+  resources/menu/OpenImports.svg:  # Imports
+    base: [desktop-download, c-lavender]
+  resources/menu/OpenNames.svg:  # Names
+    base: [tag, c-lavender]
+  resources/menu/OpenFunctions.svg:  # Functions
+    base: [symbol-method-arrow, c-yellow]
+  resources/menu/OpenStrings.svg:  # Strings
+    base: [symbol-string, c-green]
+  resources/menu/OpenSegments.svg:  # Segments
+    base: [layers, c-sapphire]
+  resources/menu/OpenSegmentRegisters.svg:  # Segment Registers
+    base: [symbol-namespace, c-sapphire]
+  resources/menu/OpenSignatures.svg:  # Signatures
+    base: [library, c-mauve]
+  resources/menu/OpenTypeLibraries.svg:  # Type Libraries
+    base: [library, c-blue]
+  resources/menu/OpenLocalTypes.svg:  # Local Types
+    base: [symbol-class, c-blue]
+  resources/menu/OpenXrefs.svg:  # Xref Graph*
+    base: [references, c-teal]
+  resources/menu/Bookmarks.svg:  # Bookmarks
+    base: [bookmark, c-yellow]
+  resources/menu/OpenProblems.svg:  # Problems
+    base: [warning, c-yellow]
+  resources/menu/PatchedBytes.svg:  # Patched bytes
+    base: [diff-modified, c-maroon]
+  resources/menu/ShowUndoHistory.svg:  # Undo history
+    base: [discard, c-text]
+  resources/menu/OutputWindow.svg:  # Output, Output window
+    base: [output, c-text]
+  # New in 9.4, no action shows it: presumably the Pseudocode* window's
+  # (was plugin/window-pseudocode). Microcode* has no named icon.
+  resources/menu/Pseudocode.svg:
+    base: [code, c-mauve]
+
+  # List rows: Local Types struct entries (was swapped: IDAG/resources/widgets/struct)
+  resources/widgets/struct.svg:
+    base: [symbol-structure, c-blue]
+
+
 
 # Functions
 Function:
@@ -277,9 +363,9 @@ DelHiddenRange:
   modifier: delete
 ShowFlags:
   base: [flag, c-text]
-TwoFlags:
-  base: [flag, c-text]
-  modifier: add
+# TwoFlags:
+#   base: [flag, c-text]
+#   modifier: add
 
 # Files, databases, desktops (down = save/export, up = load)
 LoadFile:
@@ -550,9 +636,10 @@ DiffToggleDetails:
   base: [info, c-mauve]
   modifier: check
 
-# Icons IDA loads straight from its resources instead of through the theme's
-# themeicon properties. The plugin recognises them by their pixels and swaps
-# them at runtime. Keyed by resource path under ":/", without ".svg".
+# Icons IDA loads straight from its resources instead of through its icon
+# names. The 9.3 plugin recognised them by their pixels and swapped them at
+# runtime (src/ida/old_chrome_icon_hack.py, not loaded now). Keyed by
+# resource path under ":/", without ".svg".
 swapped:
   # Local Types rows
   IDAG/resources/widgets/struct:
@@ -616,6 +703,7 @@ windows:
   Patched bytes: PatchedBytes
   Undo history: ShowUndoHistory
   Output: OutputWindow
+  "Output window": OutputWindow
   "Pseudocode*": plugin/window-pseudocode
   "Microcode*": plugin/window-microcode
 

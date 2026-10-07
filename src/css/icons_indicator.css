@@ -15,6 +15,27 @@ QRadioButton::indicator:checked
     image: url("$RELPATH/icons/radio-checked.svg");
 }
 
+/* Checked menu entries (e.g. "C-like format"): otherwise the native style
+ * draws its own grey check. Sized like a menu icon, so it sits in the icon
+ * column; unchecked entries draw nothing, as before. An entry with both an
+ * icon and a check state shows only its icon (Qt, with a style sheet). */
+
+QMenu::indicator
+{
+    width: 16px;
+    height: 16px;
+}
+
+QMenu::indicator:non-exclusive:checked
+{
+    image: url("$RELPATH/icons/menu-checked.svg");
+}
+
+QMenu::indicator:exclusive:checked
+{
+    image: url("$RELPATH/icons/menu-selected.svg");
+}
+
 /* Tab close buttons (e.g. tabbed dock windows): drawn by the style, red in IDA's own theme */
 
 QTabBar::close-button

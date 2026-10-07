@@ -92,7 +92,7 @@ CustomIDAMemo[os-dark-theme="true"]
 {
     border: none;
 
-    /* Pseudocode tokens are re-tagged by the plugin (src/hexrays.py); the
+    /* Pseudocode tokens are re-tagged by the plugin (src/ida/hexrays.py); the
      * "pc:" notes say which pseudocode token each property ends up colouring. */
 
     /* Text and comments */

@@ -8,15 +8,16 @@ Build the theme: generate the colour definitions and bundle the CSS.
    `@importtheme "_base";` then an @def for every colour (ctp-c-*),
    definition (ctp-d-*) and role (ctp-r-*).
 2. The CSS files listed in src/styles.txt are appended in that order.
-3. IDA's toolbar/menu icons (src/icons.txt) are pointed at the theme's own
-   icons/menu/<Name>.svg (built by scripts/build-icons.py).
-4. The roles the plugin needs (common.config.ROLE_TARGETS) are written to
+   (Toolbar/menu icons are not set here: IDA 9.4 blanks any
+   `qproperty-themeicon-*` that is not one of its own resources, so the
+   plugin sets them, see src/ida/chrome_action_icons.py.)
+3. The roles the plugin needs (common.config.ROLE_TARGETS) are written to
    src/color_gen.py as resolved colours, e.g. TITLEBAR__CAPTION = "#181825".
 """
 
 from common.config import HEX_RE, PYTHON, colors, definitions, load_config, resolve, roles
 from common.errors import ScriptError, run
-from common.paths import COLOR_GEN, CONFIG_FILE, ICON_LIST, STYLES_LIST, THEME_CSS, ida_icon_names, rel
+from common.paths import COLOR_GEN, CONFIG_FILE, STYLES_LIST, THEME_CSS, rel
 from tools.css_bundler import bundle_css_files, css_banner
 
 # IDA expands variable references even inside comments, so nothing written into
@@ -31,7 +32,7 @@ HEADER = """/*
  *   ctp-d-*   definitions: shared aliases of colours
  *   ctp-r-*   roles: one per place a colour is used below
  *
- * Pseudocode needs the catppuccin plugin (src/hexrays.py): Hex-Rays reuses
+ * Pseudocode needs the catppuccin plugin (src/ida/hexrays.py): Hex-Rays reuses
  * one colour tag for keywords and numbers, one for members and operators,
  * and so on; the plugin re-tags its output so each kind gets its own.
  */"""
@@ -78,14 +79,6 @@ def generate_definitions(config, color_values, definition_values):
     return "\n\n".join(parts)
 
 
-def generate_menu_icons():
-    """Point every IDA toolbar/menu icon at icons/menu/<Name>.svg."""
-    lines = ['    qproperty-themeicon-%s: url("$RELPATH/icons/menu/%s.svg");' % (n, n)
-             for n in ida_icon_names()]
-    return "%s\n\nIDAMainWindow\n{\n%s\n}" % (
-        css_banner("Toolbar/menu icons (generated from %s)" % rel(ICON_LIST)), "\n".join(lines))
-
-
 def main():
     config = load_config()
     color_values = colors(config)
@@ -93,14 +86,13 @@ def main():
 
     styles = bundle_css_files(STYLES_LIST)
     parts = [generate_definitions(config, color_values, definition_values),
-             styles.source,
-             generate_menu_icons()]
+             styles.source]
     output = "\n\n".join(parts) + "\n"
 
     THEME_CSS.parent.mkdir(parents=True, exist_ok=True)
     THEME_CSS.write_text(output, encoding="utf-8", newline="\n")
-    print("built %s from %s, %s, %s" % (rel(THEME_CSS), rel(CONFIG_FILE),
-                                        ", ".join(rel(p) for p in styles.files), rel(ICON_LIST)))
+    print("built %s from %s, %s" % (rel(THEME_CSS), rel(CONFIG_FILE),
+                                    ", ".join(rel(p) for p in styles.files)))
 
     python = generate_python(config, color_values, definition_values)
     COLOR_GEN.write_text(python, encoding="utf-8", newline="\n")

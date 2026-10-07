@@ -1,21 +1,17 @@
 """
-List IDA's built-in menu/toolbar icons (SVGs compiled into IDA).
+Dump the icons IDA's actions can show.
 
-    uv run scripts/dump-icons.py    -> src/icons.txt
-                                       .cache/ida_icon_dump.html
+    uv run scripts/dump-icons.py    -> src/ida/icon_meta.yaml
+                                       .cache/ida-icon-dump/
 
-Starts IDA (common.paths.ida_dir()) in batch mode on a tiny
-throwaway binary; scripts/ida/dump_icons.py dumps the icons inside IDA.
-src/icons.txt gets the icon file names; .cache/ida_icon_dump.html renders
-the original icons for reference. Numbered icons (e.g. 177.svg) are left out,
-since a theme cannot replace them.
+Starts IDA (common.paths.ida_dir()) headless on a tiny throwaway binary, with
+the catppuccin plugin off (CATPPUCCIN_DISABLE=1); scripts/ida/dump_icons.py
+writes the icons inside IDA and quits. See that script for the output.
 
 The binary lives at a fixed path, .cache/dump-icons/stub.bin, so IDA's
 recent-files history gets one entry rather than one per run. That folder is
 emptied before each run (so IDA never reopens an old database) and afterwards
 only the stub is kept.
-
-The icons are all 32x32 (viewBox="0 0 32 32").
 """
 
 import os
@@ -23,12 +19,9 @@ import shutil
 import subprocess
 
 from common.errors import ScriptError, run
-from common.paths import (DUMP_ICONS_WORK_DIR, ICON_DUMP_PREVIEW, ICON_LIST, IDA_DUMP_SCRIPT, file_url,
-                          ida_dir, ida_exe, rel)
-from common.render import write_page
+from common.paths import DUMP_ICONS_WORK_DIR, ICON_DUMP_DIR, ICON_META_FILE, IDA_DUMP_SCRIPT, ida_dir, ida_exe, rel
 
 STUB_NAME = "stub.bin"
-OUT_ENV = "CATPPUCCIN_DUMP_ICONS_OUT"
 TIMEOUT_S = 300
 
 # Anything IDA does not recognise loads as a raw binary; all it has to do is
@@ -50,39 +43,27 @@ def _clean_work_dir(keep=()):
 
 def main():
     exe = ida_exe(ida_dir())
-
     _clean_work_dir()
     stub = DUMP_ICONS_WORK_DIR / STUB_NAME
     stub.write_bytes(STUB)
     try:
-        dump = DUMP_ICONS_WORK_DIR / "dump"
-        dump.mkdir()
-        env = dict(os.environ, **{OUT_ENV: str(dump)})
         print("running %s ..." % exe)
         try:
-            subprocess.run([exe, "-A", "-S%s" % IDA_DUMP_SCRIPT, stub],
-                           cwd=DUMP_ICONS_WORK_DIR, env=env, timeout=TIMEOUT_S, check=False)
+            subprocess.run([exe, "-A", "-S%s" % IDA_DUMP_SCRIPT, stub], cwd=DUMP_ICONS_WORK_DIR,
+                           env=dict(os.environ, CATPPUCCIN_DISABLE="1"), timeout=TIMEOUT_S, check=False)
         except subprocess.TimeoutExpired:
             raise ScriptError("IDA did not finish within %d s" % TIMEOUT_S)
-
-        error = dump / "error.txt"
-        if error.is_file():
-            raise ScriptError("inside IDA:\n" + error.read_text(encoding="utf-8"))
-        listing = dump / "icons.txt"
-        if not listing.is_file():
-            raise ScriptError("IDA exited without listing the icons")
-        names = [n for n in listing.read_text(encoding="utf-8").split("\n") if n]
-        if not names:
-            raise ScriptError("IDA listed no icons")
-
-        ICON_LIST.write_text("".join(n + "\n" for n in names), encoding="utf-8", newline="\n")
-        print("listed %d icons in %s" % (len(names), rel(ICON_LIST)))
-
-        write_page([(n, dump / "svg" / n) for n in names],
-                   "IDA's built-in icons", ICON_DUMP_PREVIEW)
-        print("rendered them to %s" % file_url(ICON_DUMP_PREVIEW))
     finally:
         _clean_work_dir(keep=(STUB_NAME,))
+
+    error = ICON_DUMP_DIR / "error.txt"
+    if error.is_file():
+        raise ScriptError("inside IDA:\n" + error.read_text(encoding="utf-8"))
+    summary = ICON_DUMP_DIR / "summary.txt"
+    if not summary.is_file():
+        raise ScriptError("IDA exited without dumping the icons")
+    print(summary.read_text(encoding="utf-8").rstrip())
+    print("wrote %s; copies of the icons in %s" % (rel(ICON_META_FILE), rel(ICON_DUMP_DIR)))
 
 
 if __name__ == "__main__":

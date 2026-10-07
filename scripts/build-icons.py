@@ -9,43 +9,41 @@ Colours come from the config file (common.paths.CONFIG_FILE).
 - Arrows: arrow-{up,down,left,right}[-<state>].svg for every state in
   roles.arrows (`normal` has no suffix), used by src/css/icons_arrow.css
   and the plugin's nav band buttons.
-- Check box / radio marks: checkbox-checked, checkbox-indeterminate and
-  radio-checked.svg, coloured by roles.indicators, used by
-  src/css/icons_indicator.css.
-- IDA's toolbar/menu icons: menu/<Name>.svg for every icon in the icon config
-  (common.paths.ICON_CONFIG_FILE); build-css points IDA at them. Each is a
-  codicon in a colour, optionally with a modifier badge
-  (src/icons/modifier-<name>.svg) layered on its bottom-right corner, with the
-  codicon cut away around the badge. .cache/ida_codicon.html shows them all.
-- Swapped icons: swapped/<resource path>.svg for the icon config's `swapped`
-  section, icons IDA loads straight from its resources (e.g. Local Types
-  rows); the plugin swaps them at runtime.
-- Plugin icons: plugin/<name>.svg for the icon config's `plugin` section,
-  icons IDA has no name for (e.g. the dock header close button).
-- src/icons_gen.py: for the plugin, the dock window icons by title (the icon
-  config's `windows` section) and the plugin icons' paths.
+- Check box / radio / menu marks: checkbox-checked, checkbox-indeterminate,
+  radio-checked, menu-checked and menu-selected.svg, coloured by
+  roles.indicators, used by src/css/icons_indicator.css.
+- IDA's icons: themes/catppuccin/<path> for every entry of the icon config's
+  `icons` section (common.paths.ICON_CONFIG_FILE), keyed by the path in
+  src/ida/icon_meta.yaml (from dump-icons); the plugin sets them on IDA's
+  actions. Each is a codicon in a colour, optionally with a modifier badge
+  (src/icons/modifier-<name>.svg) layered on its bottom-right corner, with
+  the codicon cut away around the badge. .cache/ida_codicon.html shows them
+  all. A path missing from the metadata fails the build; metadata icons
+  with no entry only warn (IDA's icon stays). Other top-level entries of the
+  icon config (the 9.3 layout: names, `swapped`, `windows`, `plugin`) are
+  ignored.
+- src/ida/icon_meta_gen.py: for the plugin, the icons IDA loads without a
+  name, from src/ida/icon_meta.yaml (the `map_by_action` entries, written
+  by dump-icons): their path and the actions to match.
 """
 
-import re
 import shutil
-from pathlib import Path
 
 import yaml
 
-from common.codicons import BADGE_CX, BADGE_CY, BADGE_GAP_R, icon_body, svg_body
+from common.codicons import BADGE_CX, BADGE_CY, BADGE_GAP_R, BADGE_R, icon_body, svg_body
 from common.config import HEX_RE, ICONS, colors, definitions, load_config, resolve, roles
 from common.errors import ScriptError, run
-from common.paths import (CODICON_PREVIEW, CONFIG_FILE, ICON_CONFIG_FILE, ICON_LIST, ICONS_DIR, ICONS_GEN,
-                          MENU_ICONS_DIR, PLUGIN_ICONS_DIR, SWAPPED_ICONS_DIR, codicon_file, file_url,
-                          ida_icon_names, modifier_file, rel)
+from common.icon_meta import load_icon_meta
+from common.paths import (CODICON_PREVIEW, CONFIG_FILE, DIST_THEME, ICON_CONFIG_FILE, ICON_META_FILE,
+                          ICON_META_GEN, ICONS_DIR, MENU_ICONS_DIR, PLUGIN_ICONS_DIR, SWAPPED_ICONS_DIR,
+                          codicon_file, file_url, modifier_file, rel)
 from common.render import write_page
 
-SWAPPED_SECTION = "swapped"
-SWAPPED_KEY_RE = re.compile(r"[\w-]+(/[\w-]+)*")
-PLUGIN_SECTION = "plugin"
-PLUGIN_PREFIX = "plugin/"    # windows: values naming a plugin icon
-WINDOWS_SECTION = "windows"
-WILDCARD = "*"
+ICONS_SECTION = "icons"
+UNMAPPED_SHOWN = 10          # unmapped icons listed in the warning
+# Built by the 9.3 layout (icons/menu, icons/swapped, icons/plugin); removed
+OLD_ICON_DIRS = [MENU_ICONS_DIR, SWAPPED_ICONS_DIR, PLUGIN_ICONS_DIR]
 
 # 10x10 triangles, by direction
 ARROWS = {
@@ -67,16 +65,31 @@ INDICATORS = {
     "checkbox-indeterminate": ("check", '<path d="M4 8H12" fill="none" stroke="%s" '
                                         'stroke-width="2.2" stroke-linecap="round"/>'),
     "radio-checked": ("radio", '<circle cx="8" cy="8" r="3.5" fill="%s"/>'),
+    # Checked menu entries: thinner, unboxed, in the menu's text colour
+    "menu-checked": ("menu", '<path d="M3.5 8.5L6.5 11.5L12.5 4.5" fill="none" stroke="%s" '
+                             'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'),
+    "menu-selected": ("menu", '<circle cx="8" cy="8" r="3" fill="%s"/>'),
 }
 INDICATOR_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">'
                  '%s</svg>\n')
 
 ICON_SVG = ('<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">'
             '%s</svg>\n')
+# Modifier badges are drawn at BADGE_SCALE of the codicon badge's size,
+# shrunk towards the icon's bottom-right corner (the badge circle touches
+# both edges, so it stays in the corner); the gap cut around them keeps its
+# width.
+BADGE_SCALE = 0.8
+BADGE_CORNER = 16
+BADGE_TRANSFORM = "translate(%g %g) scale(%g) translate(%g %g)" % (
+    BADGE_CORNER, BADGE_CORNER, BADGE_SCALE, -BADGE_CORNER, -BADGE_CORNER)
 BADGE_GAP_MASK = (
     '<defs><mask id="badge-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="16" height="16">'
     '<rect width="16" height="16" fill="#fff"/>'
-    '<circle cx="%g" cy="%g" r="%g" fill="#000"/></mask></defs>' % (BADGE_CX, BADGE_CY, BADGE_GAP_R))
+    '<circle cx="%g" cy="%g" r="%g" fill="#000"/></mask></defs>' % (
+        BADGE_CORNER - (BADGE_CORNER - BADGE_CX) * BADGE_SCALE,
+        BADGE_CORNER - (BADGE_CORNER - BADGE_CY) * BADGE_SCALE,
+        BADGE_R * BADGE_SCALE + (BADGE_GAP_R - BADGE_R)))
 
 
 def _resolved(ref, color_values, definition_values, where, config_file):
@@ -148,7 +161,8 @@ def _compose(name, entry, modifiers, color_values, definition_values):
     if modifier is None:
         layers = body
     elif modifier in modifiers:
-        layers = '%s<g mask="url(#badge-gap)">%s</g>%s' % (BADGE_GAP_MASK, body, modifiers[modifier])
+        layers = '%s<g mask="url(#badge-gap)">%s</g><g transform="%s">%s</g>' % (
+            BADGE_GAP_MASK, body, BADGE_TRANSFORM, modifiers[modifier])
     else:
         raise ScriptError("%s: unknown modifier %r (defined: %s)"
                           % (where, modifier, ", ".join(modifiers)))
@@ -156,29 +170,18 @@ def _compose(name, entry, modifiers, color_values, definition_values):
     return ICON_SVG % layers, label
 
 
-def _write_icons(entries, out_dir, modifiers, color_values, definition_values):
-    """Build {relative name: entry} into out_dir/<name>.svg; returns preview items."""
-    if out_dir.is_dir():
-        shutil.rmtree(out_dir)
-    preview = []
-    for name, entry in entries.items():
-        svg, label = _compose(name, entry, modifiers, color_values, definition_values)
-        path = out_dir / (name + ".svg")
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(svg, encoding="utf-8", newline="\n")
-        preview.append((label, path))
-    return preview
-
-
 def build_ida_icons(color_values, definition_values):
+    """themes/catppuccin/<path> for every icon in the icon config's `icons`
+    section (keyed by the path in src/ida/icon_meta.yaml); other top-level
+    entries (the 9.3 layout) are ignored."""
     with ICON_CONFIG_FILE.open(encoding="utf-8") as f:
         icon_config = yaml.safe_load(f)
-    if not isinstance(icon_config, dict) or not isinstance(icon_config.get("modifiers"), dict):
-        raise ScriptError("%s: expected a `modifiers` section and one entry per icon"
-                          % rel(ICON_CONFIG_FILE))
+    if not isinstance(icon_config, dict) or not isinstance(icon_config.get("modifiers"), dict) \
+            or not isinstance(icon_config.get(ICONS_SECTION), dict):
+        raise ScriptError("%s: expected `modifiers` and `%s` sections" % (rel(ICON_CONFIG_FILE), ICONS_SECTION))
 
     modifiers = {}
-    for name, ref in icon_config.pop("modifiers").items():
+    for name, ref in icon_config["modifiers"].items():
         path = modifier_file(name)
         if not path.is_file():
             raise ScriptError("%s: modifiers.%s: %s does not exist (see scripts/extract-modifiers.py)"
@@ -186,84 +189,37 @@ def build_ida_icons(color_values, definition_values):
         color = _resolved(ref, color_values, definition_values, "modifiers." + name, ICON_CONFIG_FILE)
         modifiers[name] = _colored(svg_body(path), color)
 
-    swapped = _section(icon_config, SWAPPED_SECTION, "resource paths to icons")
-    plugin_icons = _section(icon_config, PLUGIN_SECTION, "names to icons")
-    windows = _section(icon_config, WINDOWS_SECTION, "window titles to icon names")
-    bad = [k for k in swapped if not SWAPPED_KEY_RE.fullmatch(str(k))]
-    if bad:
-        raise ScriptError("%s: %s keys must be resource paths under :/ without .svg, e.g. "
-                          "IDAG/resources/widgets/struct: %s"
-                          % (rel(ICON_CONFIG_FILE), SWAPPED_SECTION, ", ".join(map(str, bad))))
-
-    themable = ida_icon_names()
-    unknown = sorted(set(icon_config) - set(themable))
+    icons = {str(path): entry for path, entry in icon_config[ICONS_SECTION].items()}
+    meta = [icon.path for icon in load_icon_meta()]
+    unknown = sorted(set(icons) - set(meta))
     if unknown:
-        raise ScriptError("%s: not in %s: %s"
-                          % (rel(ICON_CONFIG_FILE), rel(ICON_LIST), ", ".join(unknown)))
+        raise ScriptError("%s: %s: not in %s: %s"
+                          % (rel(ICON_CONFIG_FILE), ICONS_SECTION, rel(ICON_META_FILE), ", ".join(unknown)))
 
-    preview = _write_icons(icon_config, MENU_ICONS_DIR, modifiers, color_values, definition_values)
-    missing = [n for n in themable if n not in icon_config]
-    print("built %d IDA icons in %s" % (len(preview), rel(MENU_ICONS_DIR)))
-    if missing:
-        print("warning: no icon configured for %d: %s" % (len(missing), ", ".join(missing)))
+    # Each top folder of the paths (resources/, action_ids/) is the build's alone
+    for top in sorted(set(path.split("/", 1)[0] for path in meta)):
+        if (DIST_THEME / top).is_dir():
+            shutil.rmtree(DIST_THEME / top)
+    for old in OLD_ICON_DIRS:                  # the 9.3 layout's, no longer built
+        if old.is_dir():
+            shutil.rmtree(old)
+    preview = []
+    for path, entry in sorted(icons.items()):
+        svg, label = _compose(path, entry, modifiers, color_values, definition_values)
+        target = DIST_THEME / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(svg, encoding="utf-8", newline="\n")
+        preview.append((label, target))
+    print("built %d IDA icons in %s" % (len(preview), rel(DIST_THEME)))
 
-    swapped_preview = _write_icons(swapped, SWAPPED_ICONS_DIR, modifiers, color_values, definition_values)
-    print("built %d swapped icons in %s" % (len(swapped_preview), rel(SWAPPED_ICONS_DIR)))
+    unmapped = [path for path in meta if path not in icons]
+    if unmapped:
+        shown = ", ".join(unmapped[:UNMAPPED_SHOWN]) + (", ..." if len(unmapped) > UNMAPPED_SHOWN else "")
+        print("warning: %d of %d icons in %s have no entry in %s %s (IDA's stay): %s"
+              % (len(unmapped), len(meta), rel(ICON_META_FILE), rel(ICON_CONFIG_FILE), ICONS_SECTION, shown))
 
-    bad = [k for k in plugin_icons if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", str(k))]
-    if bad:
-        raise ScriptError("%s: %s keys must be lower-case-dashed names: %s"
-                          % (rel(ICON_CONFIG_FILE), PLUGIN_SECTION, ", ".join(map(str, bad))))
-    plugin_preview = _write_icons(plugin_icons, PLUGIN_ICONS_DIR, modifiers, color_values, definition_values)
-    print("built %d plugin icons in %s" % (len(plugin_preview), rel(PLUGIN_ICONS_DIR)))
-
-    write_page(preview + swapped_preview + plugin_preview, "IDA icons from codicons", CODICON_PREVIEW)
+    write_page(preview, "IDA icons from codicons", CODICON_PREVIEW)
     print("rendered them to %s" % file_url(CODICON_PREVIEW))
-
-    ICONS_GEN.write_text(generate_python(windows, plugin_icons, icon_config), encoding="utf-8", newline="\n")
-    print("wrote %s" % rel(ICONS_GEN))
-
-
-def _section(icon_config, name, what):
-    section = icon_config.pop(name, None) or {}
-    if not isinstance(section, dict):
-        raise ScriptError("%s: `%s` must map %s" % (rel(ICON_CONFIG_FILE), name, what))
-    return section
-
-
-def _icon_path(folder, name):
-    """A built icon's path under the theme's icons/ folder, as the plugin uses it."""
-    return Path(folder, name).relative_to(ICONS_DIR).as_posix() + ".svg"
-
-
-def generate_python(windows, plugin_icons, icon_config):
-    """src/icons_gen.py: dock window icons by title, and the plugin icons."""
-    lines = ['"""Icons used by the plugin, as paths under the theme\'s icons/ folder.',
-             "",
-             "Generated by scripts/build-icons.py from %s -- do not edit." % rel(ICON_CONFIG_FILE),
-             '"""', "",
-             "# (window title, or its start if is_prefix; icon)",
-             "WINDOW_ICONS = ["]
-    for title, name in windows.items():
-        where = "%s: %s.%r" % (rel(ICON_CONFIG_FILE), WINDOWS_SECTION, title)
-        title = str(title)
-        name = str(name)
-        if name.startswith(PLUGIN_PREFIX) and name[len(PLUGIN_PREFIX):] in plugin_icons:
-            path = _icon_path(PLUGIN_ICONS_DIR, name[len(PLUGIN_PREFIX):])
-        elif name in icon_config:
-            path = _icon_path(MENU_ICONS_DIR, name)
-        else:
-            raise ScriptError("%s: %r is neither an IDA icon defined above nor %s<name> from `%s`"
-                              % (where, name, PLUGIN_PREFIX, PLUGIN_SECTION))
-        is_prefix = title.endswith(WILDCARD)
-        title = title[:-len(WILDCARD)] if is_prefix else title
-        if not title or WILDCARD in title:
-            raise ScriptError("%s: %s is only allowed at the end of a title" % (where, WILDCARD))
-        lines.append("    (%r, %r, %r)," % (title, is_prefix, path))
-    lines.append("]")
-    for name in plugin_icons:
-        lines.append("%s_ICON = %r" % (str(name).replace("-", "_").upper(), _icon_path(PLUGIN_ICONS_DIR, name)))
-    return "\n".join(lines) + "\n"
 
 
 def main():
@@ -274,6 +230,24 @@ def main():
     build_arrow_icons(icon_roles)
     build_indicator_icons(icon_roles)
     build_ida_icons(color_values, definition_values)
+    build_icon_meta()
+
+
+def build_icon_meta():
+    """src/ida/icon_meta_gen.py from src/ida/icon_meta.yaml: the icons the
+    plugin maps by action (`map_by_action: true`, icons IDA loads without a
+    name). The others are found by path at runtime."""
+    unnamed = [(icon.path, icon.actions) for icon in load_icon_meta() if icon.map_by_action and icon.actions]
+    lines =['"""Icons IDA loads without a name, matched by action.',
+             "",
+             "Generated by scripts/build-icons.py from %s -- do not edit." % rel(ICON_META_FILE),
+             '"""', "",
+             "# (path, actions showing it)",
+             "UNNAMED_ICONS = ["]
+    lines += ["    (%r, %r)," % item for item in unnamed]
+    lines.append("]")
+    ICON_META_GEN.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    print("wrote %s (%d unnamed icons)" % (rel(ICON_META_GEN), len(unnamed)))
 
 
 if __name__ == "__main__":

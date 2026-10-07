@@ -23,7 +23,9 @@ To install the out-of-box plugin package with prebuilt icons and predefined colo
 - Copy `plugins/catppuccin.py` to the plugins directory (`%APPDATA\Hex-Rays\IDA Pro\plugins`).
 - Copy `themes/catppuccin/` to the themes directory (`%APPDATA\Hex-Rays\IDA Pro\themes`).
 - Select `Options` > `Colors...` and change the theme to `catppuccin`.
-- Restart IDA so the plugin loads, to patch more colors in the UI.
+- Restart IDA so the plugin loads, to patch more colors in the UI. The
+  toolbar and menu icons also come from the plugin: without it, IDA's own
+  icons show.
 
 If you want to customize, you have to clone the repo, change the config,
 and build the plugin yourself.
@@ -51,16 +53,11 @@ once and remember the answer in `.cache/IDA_LOCATION.txt`.
 
 Build:
 ```shell
-./x build        # Everything below, plus the checks (check-css)
-
-# Or one step at a time:
-./x build-css    # The theme.css
-./x build-icons  # The SVG icons
-./x build-py     # The python plugin
+./x build
 ```
 
-Install - This copies the files to `%APPDATA%\Hex-Rays\IDA Pro`. Pass
-in a directory if you want it installed somewhere else.
+Install - This copies the files to `%APPDATA%\Hex-Rays\IDA Pro`, to the `plugins`
+and `themes` directories. Pass in a directory if you want it installed somewhere else.
 ```shell
 ./x install
 ```
@@ -68,4 +65,4 @@ in a directory if you want it installed somewhere else.
 ## Customization
 
 To customize the colors and icons, look at `config.yaml` and `config-icons-ida.yaml`.
-After editing, run the build and install.
+After editing, run `./x build install` to iterate on the design.

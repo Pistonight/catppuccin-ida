@@ -1,13 +1,15 @@
-"""Bundle a Python entry point and the sibling modules it imports into one
+"""Bundle a Python entry point and the local modules it imports into one
 source file.
 
-Every sibling module (a .py file in the entry point's folder) the entry point
-imports, directly or indirectly, is inlined above it in dependency order;
-imports of sibling modules are dropped and all other top-level imports are
-hoisted to the top.
+Local modules are .py files under the entry point's folder, named from it
+(`perf` is perf.py, `ida.chrome` is ida/chrome.py). Every local module the
+entry point imports, directly or indirectly, is inlined above it in
+dependency order; imports of local modules are dropped and all other
+top-level imports are hoisted to the top.
 
 Rules for the modules, so the flattened file behaves like the modules did:
-- import sibling modules as `from module import name`, never `import module`
+- import local modules as `from module import name` (`from ida.chrome import
+  Chrome`), never `import module` or `from package import module`
 - top-level names must be unique across all bundled modules
 """
 
@@ -38,7 +40,7 @@ def _defined_names(tree):
 
 
 class _Module:
-    def __init__(self, path, is_local, missing_hint):
+    def __init__(self, path, is_local, is_package, missing_hint):
         self.path = path
         self.source = path.read_text(encoding="utf-8")
         self.lines = self.source.splitlines()
@@ -66,6 +68,9 @@ class _Module:
                 self._drop(node)
             elif isinstance(node, ast.ImportFrom):
                 local = node.level == 0 and is_local(node.module)
+                if node.level == 0 and is_package(node.module):
+                    raise ScriptError("%s:%d: import names from a module, not modules from `%s`"
+                                      % (where, node.lineno, node.module))
                 if node.level == 0 and node.module and not local:
                     hint = missing_hint(node.module)
                     if hint:
@@ -73,7 +78,7 @@ class _Module:
                 if local:
                     names = [a.name for a in node.names]
                     if "*" in names or any(a.asname for a in node.names):
-                        raise ScriptError("%s:%d: no `*` or `as` when importing sibling modules"
+                        raise ScriptError("%s:%d: no `*` or `as` when importing local modules"
                                           % (where, node.lineno))
                     self.deps.append(node.module)
                     self.local_imports.append((node.module, names, node.lineno))
@@ -94,20 +99,23 @@ class _Module:
 
 def bundle_python_modules(entry_point, header="",
                           missing_hint: Callable[[str], Optional[str]] = lambda name: None):
-    """Bundle `entry_point` (a .py file) with the sibling modules it imports.
+    """Bundle `entry_point` (a .py file) with the local modules it imports.
 
     `header` is a comment placed after the entry point's docstring.
     `missing_hint(module)` is asked about every `from module import ...` that
-    is not a sibling module; it returns an error message to fail with (e.g.
+    is not a local module; it returns an error message to fail with (e.g.
     for a generated module that is not built yet), or None for an external
     import."""
     folder = entry_point.parent
 
     def module_path(name):
-        return folder / (name + ".py")
+        return folder.joinpath(*name.split(".")).with_suffix(".py")
 
     def is_local(name):
         return name is not None and module_path(name).is_file()
+
+    def is_package(name):
+        return name is not None and folder.joinpath(*name.split(".")).is_dir()
 
     entry = entry_point.stem
     modules, order = {}, []
@@ -118,7 +126,8 @@ def bundle_python_modules(entry_point, header="",
         if name in visiting:
             raise ScriptError("import cycle through %s" % rel(module_path(name)))
         visiting.add(name)
-        mod = _Module(entry_point if name == entry else module_path(name), is_local, missing_hint)
+        mod = _Module(entry_point if name == entry else module_path(name), is_local, is_package,
+                      missing_hint)
         for dep in mod.deps:
             collect(dep, visiting)
         visiting.discard(name)
@@ -127,7 +136,7 @@ def bundle_python_modules(entry_point, header="",
 
     collect(entry, set())
 
-    # every name imported from a sibling module must exist there
+    # every name imported from a local module must exist there
     for mod in modules.values():
         for dep, names, lineno in mod.local_imports:
             missing = [n for n in names if n not in modules[dep].defined]

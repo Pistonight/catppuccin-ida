@@ -7,9 +7,10 @@ sheets:
   can only ask for the dark title bar.
 - the nav band scroll buttons: IDA sets their (black) icon in code after the
   theme is applied, so we replace it at runtime.
-- disabled icons: Qt generates them by remapping the icon to greys around the
-  window colour, which leaves light icons light on a dark theme. A proxy style
-  draws them as the normal icon, faded, instead.
+
+Icons are in chrome_*.py modules (chrome_faded_disabled_icons,
+chrome_action_icons, chrome_icon_swap, sharing chrome_icon_resources); Chrome sets them up and
+refreshes them with everything else.
 """
 
 import ctypes
@@ -17,11 +18,15 @@ import os
 import re
 import sys
 
-from PySide6.QtCore import QObject, Qt, QTimer
-from PySide6.QtGui import QIcon, QPainter, QPixmap, QPixmapCache
-from PySide6.QtWidgets import QAbstractButton, QApplication, QProxyStyle, QStyle
+from PySide6.QtCore import QObject, QTimer
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QAbstractButton, QApplication
 
 from color_gen import TITLEBAR__BORDER, TITLEBAR__CAPTION, TITLEBAR__TEXT
+from ida.chrome_action_icons import ActionIcons
+from ida.chrome_faded_disabled_icons import install_faded_disabled_icons
+from ida.chrome_icon_resources import IconResources
+from ida.chrome_icon_swap import IconSwap
 from perf import perf
 
 DWMWA_USE_IMMERSIVE_DARK_MODE = 20
@@ -31,7 +36,6 @@ DWMWA_TEXT_COLOR = 36
 
 THEME_DIR_RE = re.compile(r'url\("([^"]*/themes/catppuccin)/icons/')
 POLL_MS = 1000
-DISABLED_ICON_OPACITY = 0.35
 
 
 def _colorref(hex_color):
@@ -51,46 +55,6 @@ def theme_dir():
     return m.group(1) if m else None
 
 
-class _FadedDisabledIcons(QProxyStyle):
-    """The application's style, except disabled icons are the normal icon at
-    DISABLED_ICON_OPACITY."""
-
-    def generatedIconPixmap(self, iconMode, pixmap, opt):
-        if iconMode != QIcon.Mode.Disabled:
-            return super().generatedIconPixmap(iconMode, pixmap, opt)
-        faded = QPixmap(pixmap.size())
-        faded.setDevicePixelRatio(pixmap.devicePixelRatio())
-        faded.fill(Qt.GlobalColor.transparent)
-        painter = QPainter(faded)
-        painter.setOpacity(DISABLED_ICON_OPACITY)
-        painter.drawPixmap(0, 0, pixmap)
-        painter.end()
-        return faded
-
-
-def _install_faded_disabled_icons():
-    """Put _FadedDisabledIcons on top of the application's existing style,
-    whatever it is (IDA's own proxy style, a user's choice, ...); returns the
-    new style, or None if the style chain looks unexpected."""
-    current = _app().style()
-    base = current
-    if current.metaObject().className() == "QStyleSheetStyle":
-        # With a style sheet (the theme), Qt wraps the real style in an
-        # internal QStyleSheetStyle; the real style is its only QStyle child.
-        inner = [c for c in current.children() if isinstance(c, QStyle)]
-        if len(inner) != 1:
-            print("catppuccin: disabled icons left unchanged; QStyleSheetStyle wraps %d styles"
-                  % len(inner))
-            return None
-        base = inner[0]
-    # QProxyStyle takes ownership of `base`, so it survives Qt deleting the old
-    # QStyleSheetStyle; setStyle() then wraps us in a new one for the style sheet.
-    faded = _FadedDisabledIcons(base)
-    _app().setStyle(faded)
-    QPixmapCache.clear()      # drop disabled icons already drawn the old way
-    return faded
-
-
 class Chrome(QObject):
     def __init__(self, theme_dir):
         super().__init__()
@@ -102,7 +66,13 @@ class Chrome(QObject):
         self.nav_buttons: list[QAbstractButton] = []
         self.dwm = ctypes.windll.dwmapi if sys.platform == "win32" else None
         with perf.measure("init: faded disabled icons (setStyle)", report=True):
-            self.style = _install_faded_disabled_icons()   # kept alive with the plugin
+            self.style = install_faded_disabled_icons()   # kept alive with the plugin
+        with perf.measure("init: icon resources", report=True):
+            self.icon_resources = IconResources(theme_dir)
+        with perf.measure("init: action icons", report=True):
+            self.action_icons = ActionIcons(self.icon_resources)
+        with perf.measure("init: row icons", report=True):
+            self.icon_swap = IconSwap(self.icon_resources)
 
         _app().focusChanged.connect(self.refresh)   # new dialogs take focus
         self.timer = QTimer(self)                # catches everything else
@@ -117,6 +87,8 @@ class Chrome(QObject):
             _app().focusChanged.disconnect(self.refresh)
         except (RuntimeError, TypeError):
             pass
+        self.action_icons.stop()
+        self.icon_swap.stop()
 
     def refresh(self, *_):
         with perf.measure("refresh"):
@@ -126,6 +98,10 @@ class Chrome(QObject):
                         self._style_title_bar(w)
             with perf.measure("refresh: nav buttons"):
                 self._fix_nav_buttons()
+            with perf.measure("refresh: action icons"):
+                self.action_icons.refresh()
+            with perf.measure("refresh: row icons"):
+                self.icon_swap.refresh()
 
     def _set_dwm(self, hwnd, attr, value):
         v = ctypes.c_int(value)

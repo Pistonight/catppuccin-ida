@@ -38,6 +38,18 @@ is_script() {
     is_shell_script "$1" || is_python_script "$1"
 }
 
+# step_line <colour> <text>: "==> <text>", in the ANSI colour on a terminal
+step_line() {
+    if [ -t 1 ]; then
+        printf '\033[%sm==> %s\033[0m\n' "$1" "$2"
+    else
+        echo "==> $2"
+    fi
+}
+
+step_header() { step_line 92 "$1"; }    # bright green
+step_failed() { step_line 91 "$1"; }    # bright red
+
 # run_step <script> <n> <args...>: run the script with the first n args
 run_step() {
     name=$1 n=$2
@@ -81,10 +93,10 @@ while [ $# -gt 0 ]; do
         is_script "$a" && break
         n=$((n + 1))
     done
-    [ "$steps" -gt 1 ] && echo "==> $name"
+    [ "$steps" -gt 1 ] && step_header "$name"
     run_step "$name" "$n" "$@" || {
         status=$?
-        [ "$steps" -gt 1 ] && echo "==> $name failed (exit $status); stopping"
+        [ "$steps" -gt 1 ] && step_failed "$name failed (exit $status); stopping"
         exit "$status"
     }
     shift "$n"

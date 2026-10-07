@@ -27,16 +27,16 @@ CONFIG_FILE = ROOT / "config.yaml"
 ICON_CONFIG_FILE = ROOT / "config-icons-ida.yaml"
 # CSS files to bundle, in order (see tools/css_bundler.py)
 STYLES_LIST = SRC / "styles.txt"
-# IDA's replaceable icon names, from dump-icons (ida_icon_names())
-ICON_LIST = SRC / "icons.txt"
 # Badge overlays, from extract-modifiers (modifier_file())
 MODIFIERS_DIR = SRC / "icons"
 # Generated plugin modules
 COLOR_GEN = SRC / "color_gen.py"
-ICONS_GEN = SRC / "icons_gen.py"
+# The icons IDA's actions show (from dump-icons), and the part the plugin needs
+ICON_META_FILE = SRC / "ida" / "icon_meta.yaml"
+ICON_META_GEN = SRC / "ida" / "icon_meta_gen.py"
 # @vscode/codicons, installed with pnpm (codicon_file())
 CODICONS_DIR = ROOT / "node_modules" / "@vscode" / "codicons" / "src" / "icons"
-# Run inside IDA by dump-icons
+# Run inside IDA (headless) by dump-icons
 IDA_DUMP_SCRIPT = ROOT / "scripts" / "ida" / "dump_icons.py"
 
 # --------------------------------------------------------------------------
@@ -68,7 +68,10 @@ INSTALL_ITEMS = [
 # The IDA install the user typed in, when ida_dir() could not find one
 IDA_LOCATION_FILE = CACHE / "IDA_LOCATION.txt"
 CODICON_PREVIEW = CACHE / "ida_codicon.html"
-ICON_DUMP_PREVIEW = CACHE / "ida_icon_dump.html"
+# Written by scripts/ida/dump_icons.py (its own copy of this path)
+ICON_DUMP_DIR = CACHE / "ida-icon-dump"
+# Original vs themed action icons (test-icons-ida)
+IDA_ICON_TEST_PAGE = CACHE / "ida_icon_test.html"
 DUMP_ICONS_WORK_DIR = CACHE / "dump-icons"
 
 
@@ -118,18 +121,6 @@ def list_file_entries(path, what, hint=""):
     if not entries:
         raise ScriptError("%s lists no %s%s" % (rel(path), what, hint))
     return entries
-
-
-def ida_icon_names():
-    """IDA's toolbar/menu icon names from src/icons.txt (file names without
-    .svg, under :/IDAG/resources/menu/), in file order."""
-    names = []
-    for lineno, entry in list_file_entries(ICON_LIST, "icons", " (run ./x dump-icons)"):
-        if not entry.endswith(".svg"):
-            raise ScriptError("%s:%d: expected an .svg file name, got %r"
-                              % (rel(ICON_LIST), lineno, entry))
-        names.append(entry[:-len(".svg")])
-    return names
 
 
 # --------------------------------------------------------------------------

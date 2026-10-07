@@ -30,14 +30,15 @@ Taskfile.yml chain them.
 | `./x setup-ida` | writes `.venv/.../ida.pth` (so editors see `ida_*`) for the IDA install from `ida_dir()` (`scripts/common/paths.py`): `Paths.ida-install-dir` in `%APPDATA%\Hex-Rays\IDA Pro\ida-config.json` if set; else `.cache/IDA_LOCATION.txt` if usable; else the highest `C:\Program Files\IDA Professional <ver>`; else it asks and records the answer in `.cache/IDA_LOCATION.txt`. Scripts that need IDA call it themselves |
 | `./x check-css` | validates `src/css/` against `config.yaml` (rules below) |
 | `./x build-css` | `dist/catppuccin-ida/themes/catppuccin/theme.css` and `src/color_gen.py` |
-| `./x build-icons` | `dist/catppuccin-ida/themes/catppuccin/icons/` (arrows, menu icons, ...), `src/icons_gen.py` and `.cache/ida_codicon.html` preview |
+| `./x build-icons` | `dist/catppuccin-ida/themes/catppuccin/icons/` (arrows, indicators), `themes/catppuccin/<path>` for each entry of `config-icons-ida.yaml` `icons` (warns about `icon_meta.yaml` icons with no entry), `src/ida/icon_meta_gen.py` and `.cache/ida_codicon.html` preview |
 | `./x build-py` | bundles `src/*.py` into `dist/catppuccin-ida/plugins/catppuccin.py` (needs `build-css` and `build-icons` first, for the `*_gen.py`) |
 | `./x package` | zips the contents of `dist/catppuccin-ida/` into `dist/catppuccin-ida.zip` (unpacks into an IDA user dir) |
 | `./x install [dir]` / `./x uninstall [dir]` | copy/remove `dist/catppuccin-ida/` into IDA's user dir (default `%APPDATA%\Hex-Rays\IDA Pro`) |
-| `./x dump-icons` | runs IDA headless to list its built-in icons into `src/icons.txt`; preview in `.cache/ida_icon_dump.html` |
+| `./x dump-icons` | runs IDA headless (plugin off, `CATPPUCCIN_DISABLE=1`) to write the icons IDA's actions show to `src/ida/icon_meta.yaml` (and resource copies to `.cache/ida-icon-dump/`) |
 | `./x extract-modifiers` | regenerates `src/icons/modifier-*.svg` from codicon badges |
 | `./x setup` | `scripts/setup` / `scripts/setup.ps1`: `pnpm install` and `uv sync` |
 | `./x clean` | `scripts/clean` / `scripts/clean.ps1`: deletes `dist/`, `.cache/`, `.venv/`, `__pycache__/` and `node_modules/` (`pnpm clean`) |
+| `./x test-icons-ida` | `.cache/ida_icon_test.html`: every icon in `src/ida/icon_meta.yaml`, original (`.cache/ida-icon-dump/svg/`) vs themed (`dist/.../themes/catppuccin/<path>`) behind an always-visible toggle (T); hover shows the theme path, tiles list the actions; red block = missing from the build, empty original = mapped by action. Run after `build` and `dump-icons` |
 | `./x render-icons <folder>` | HTML preview of every SVG under a folder (`dist/test_icons.html`) |
 
 Full build: `./x build` (`scripts/build` / `build.ps1`) runs `check-css`, `build-css`, `build-icons`, `build-py`; it stops at the first failure.
@@ -46,22 +47,26 @@ Full build: `./x build` (`scripts/build` / `build.ps1`) runs `check-css`, `build
 
 ```
 config.yaml              colours: palette, tints, definitions, roles
-config-icons-ida.yaml    IDA icon name -> codicon base, colour, modifier
+config-icons-ida.yaml    `icons`: icon path (from src/ida/icon_meta.yaml) -> codicon base, colour, modifier
 src/
-  main.py                plugin entry (PLUGIN_ENTRY); merges the parts below
-  hexrays.py             re-tags Hex-Rays pseudocode (see "Pseudocode")
-  chrome.py              Windows title bars, nav band arrows, faded disabled icons
-  old_chrome_icon_hack.py  IDA 9.3 list row / dock window icon swaps; not imported, kept for reference
+  main_ida.py            IDA plugin entry (PLUGIN_ENTRY); merges the parts below
+  ida/                   IDA plugin modules, imported as `ida.<name>`
+    hexrays.py           re-tags Hex-Rays pseudocode (see "Pseudocode")
+    chrome.py            Windows title bars, nav band arrows
+    chrome_icon_resources.py  IconResources: IDA's icon resources by path, the theme's versions
+    chrome_action_icons.py    ActionIcons: toolbar/menu icons, set on the actions
+    chrome_icon_swap.py       IconSwap: list row icons, recognised by pixels
+    chrome_faded_disabled_icons.py  FadedDisabledIcons: disabled icons faded, not greyed
+    icon_meta.yaml       icons IDA's actions show (from dump-icons); icon_meta_gen.py is built from it
+    old_chrome_icon_hack.py  IDA 9.3 list row / dock window icon swaps; not imported, kept for reference
   perf.py                timings printed to IDA's output (PERF_ENABLED)
   color_gen.py           GENERATED (gitignored) colours for the plugin
-  icons_gen.py           GENERATED (gitignored) window icons by title, plugin icons
   css/                   theme CSS sources, bundled in src/styles.txt order
     widgets.css          Qt widgets
     highlight.css        syntax colours (listing, xrefs, output, script editor)
     ida_views.css        IDA view decorations (backgrounds, gutter, diff, debugger, graphs, nav band)
     icons_*.css          rules that only set images
   styles.txt             CSS files to bundle, in order
-  icons.txt              IDA's replaceable icon names (from dump-icons)
   icons/modifier-*.svg   badge overlays for icons (from extract-modifiers)
 scripts/
   <name>.py              commands for ./x
@@ -102,27 +107,69 @@ Role namespaces not meant for CSS are listed in `ROLE_TARGETS`
 plugin, `arrows` to the arrow icons. Everything else is CSS.
 
 The generated definitions block goes first in `theme.css` (with
-`@importtheme "_base";`), then `src/styles.txt` files, then the generated
-`IDAMainWindow { qproperty-themeicon-* }` block from `src/icons.txt`.
+`@importtheme "_base";`), then `src/styles.txt` files. `theme.css` sets no
+`qproperty-themeicon-*` (see "Icons").
 
 ## Icons
 
-- Built-in IDA icons are replaced via `qproperty-themeicon-<Name>`. Only names
-  IDA's `themes/_base/theme.css` declares work (about 212). Numbered icons
-  (`177.svg`, ...) cannot be replaced: not via CSS, and not by re-registering
+- Toolbar/menu (action) icons are set by the plugin, not the CSS. IDA 9.4
+  still hands each `qproperty-themeicon-<Name>` to its main window, but loads
+  the value with `load_icon()`, which only resolves `:/<prefix>/<path>`
+  resources in a table IDA builds from its own resource folders; it keeps
+  only the table index, so a file path (index -1) blanks the icon. The plugin
+  (`ActionIcons` in `src/ida/chrome_action_icons.py`, over `IconResources` in
+  `src/ida/chrome_icon_resources.py`) sets them per action
+  (`update_action_icon`; ids are not stable, actions are), finding the
+  theme's version two ways, per `src/ida/icon_meta.yaml` (entries `path`,
+  `actions`, optional `map_by_action: true`, sorted by path):
+  - by path (icons in IDA's icon table): at startup the plugin
+    walks IDA's Qt resources and asks `get_icon_id_by_name` for each key
+    (the path without `:/<prefix>/`: `:/IDAG/resources/menu/X.svg` ->
+    `resources/menu/X.svg`), giving id -> key; an action showing that id
+    gets the theme's version. Needs no data at runtime.
+  - `map_by_action: true` (icons IDA loads without a name, e.g. the
+    Git/Teams actions', drawn from `:/HVUI/resources/icons/git/`): nothing
+    maps the id back to a file, so the plugin matches the listed `actions`
+    (built into `src/ida/icon_meta_gen.py` by `build-icons`); their path is
+    just a file name, `action_ids/<id>.svg` (the id when dumped; ids are not
+    stable, so a new dump may rename them).
+  Either way the theme's version is `themes/catppuccin/<path>` (e.g.
+  `resources/menu/X.svg`, `action_ids/664.svg`): table paths drop the
+  `:/<prefix>/`, and no two resources share one.
+  Theme files are loaded on first use (`load_custom_icon`); icons without
+  one are printed as missing (`REPORT_MISSING_ICONS`). `build-icons` writes
+  them from the `icons` section of `config-icons-ida.yaml`, keyed by path; its
+  other top-level entries (names, `swapped`, `windows`, `plugin`: the 9.3
+  layout) are ignored. New actions (Hex-Rays,
+  debugger, plugins) are caught on the 1 s refresh, but
+  `get_registered_actions()` (~860 names) is only called after a UI hook
+  that may have registered some (`ready_to_run`, `database_inited`,
+  `plugin_loaded`, `debugger_menu_change`, `widget_visible`; IDA has no
+  per-action hook) or every `ACTION_SCAN_FALLBACK_S` (10 s); `stop()`
+  restores and frees them. The same APIs exist in 9.3. Without the plugin
+  (or with `CATPPUCCIN_DISABLE=1` in the environment), IDA's stock icons show.
+- Dumping: `./x dump-icons` runs IDA headless (plugin off) on a stub
+  binary with `scripts/ida/dump_icons.py`, which writes
+  `src/ida/icon_meta.yaml` (committed; regenerate, don't edit) and copies
+  of the resource images to `.cache/ida-icon-dump/` (`svg/` table icons,
+  `untabled/` the rest, `icons.txt` menu names, `summary.txt`, which also
+  lists resources that would share a path once the prefix is dropped).
+  Icons can't be replaced via CSS outside the table, nor by re-registering
   Qt resources (the first registration wins, IDA's comes first).
 - Each icon = codicon `base` in a colour + optional `modifier` badge from
   `src/icons/modifier-*.svg`, with the base masked away around the badge
-  (circle at 11.5,11.5, gap radius 5.5; see `scripts/common/codicons.py`).
+  (codicon badge circle at 11.5,11.5 r 4.5, see `scripts/common/codicons.py`;
+  drawn at `BADGE_SCALE` (0.8) towards the bottom-right corner, with a 1 px gap,
+  see `scripts/build-icons.py`).
   Codicons are 16x16; a few use a 24 grid and are scaled.
 - IDA's own icons are 32x32 SVGs drawn at 16px; previews show 16px and 64px.
 - Arrow icons (combo boxes, menus, trees, nav band) are generated from
   `roles.arrows`; Qt draws these black unless every arrow sub-control has an image.
-- `themeicon` only reaches actions (menus, toolbar). Window icons, dock
+- Action icons only reach menus and the toolbar. Window icons, dock
   headers, Windows-menu entries and list rows come from IDA's icon table, and
   some icons load straight from other resources (`:/IDAG/resources/widgets/`,
   e.g. Local Types rows). The 9.3 plugin swapped list row icons at runtime
-  (`_IconSwap`, now in `src/old_chrome_icon_hack.py` and not loaded, via a
+  (`_IconSwap`, now in `src/ida/old_chrome_icon_hack.py` and not loaded, via a
   replacement item delegate),
   recognising originals by their exact pixels: it maps
   `icons/menu/<Name>.svg` to `:/IDAG/resources/menu/<Name>.svg` and
@@ -132,9 +179,10 @@ The generated definitions block goes first in `theme.css` (with
   loads) from the 1 s refresh, in slices of at most `TABLE_SLICE_MS`: built
   in one go it took ~260 ms and froze IDA (a white flash) on the first list.
 - Dock window icons were matched by window title instead (`_WindowIcons`,
-  also in `src/old_chrome_icon_hack.py`):
+  also in `src/ida/old_chrome_icon_hack.py`):
   the `windows` section of `config-icons-ida.yaml` maps titles (trailing `*`
-  = any suffix) to icon names, generated into `src/icons_gen.py`. They are
+  = any suffix) to icon names, generated into `src/icons_gen.py` (no longer
+  built; the file is excluded from pyright). They are
   set on `IDADockWidget` (window icon), `DockTabBar` tabs (tabbed docks) and
   painted over the icon label of `DockWidgetTitle` (header of a dock alone in
   its area); the Close / Fullscreen / Float buttons of both `DockWidgetTitle`
@@ -150,23 +198,38 @@ The generated definitions block goes first in `theme.css` (with
 
 ## Plugin
 
-`./x build-py` inlines `src/main.py` and the `src/` modules it imports into one
-file (via `scripts/tools/python_bundler.py`). Rules: import src modules as `from module import name` (never
-`import module`); top-level names unique across modules; `*_gen` modules are
+`./x build-py` inlines `src/main_ida.py` and the `src/` modules it imports into one
+file (via `scripts/tools/python_bundler.py`). Module names are rooted at
+`src/` (`src/ida/chrome.py` is `ida.chrome`). Rules: import src modules as
+`from module import name`, e.g. `from ida.chrome import Chrome` (never
+`import module` or `from ida import chrome`); top-level names unique across modules; `*_gen` modules are
 generated and must exist (run `build-css`). The plugin is `PLUGIN_FIX` (loads
 at IDA startup) and does nothing unless the catppuccin theme is active
 (detected from the theme's icon paths in the app style sheet).
 
 Pseudocode: Hex-Rays reuses colour tags (keywords and numbers share one,
 members and operators share one, function names and globals share one, a
-declaration is one span). `hexrays.py` re-tags each printed line so every
+declaration is one span). `ida/hexrays.py` re-tags each printed line so every
 token kind lands on its own tag; the "pc:" comments in `highlight.css` /
 `config.yaml` say which IDA property colours which pseudocode token.
 
-Things a style sheet cannot reach, handled in `chrome.py`:
+Things a style sheet cannot reach, handled in `ida/chrome.py`:
 - Title bar colours via DWM (Windows 11; dark mode only on 10).
 - Nav band scroll buttons: IDA sets their icon in code after the theme loads.
-- Disabled icons: Qt derives them by remapping grey around the window colour
+
+and in `ida/chrome_*.py` modules, one per class (`Chrome` creates them):
+- Toolbar/menu icons (`chrome_action_icons.py`): set on the actions through
+  the SDK (see "Icons").
+- List row icons (`chrome_icon_swap.py`): rows (Local Types, Functions, ...)
+  load icons straight from resources, no action involved, and a QIcon does
+  not tell its source, so originals are recognised by pixels: each icon the
+  theme has (`<theme>/<path>`) is rendered from `:/<prefix>/<path>` into a
+  fingerprint table (per screen scale, built in `TABLE_SLICE_MS` slices),
+  and views with a plain `QStyledItemDelegate` get `IconSwapDelegate`, which
+  swaps matching row icons as they draw (cached per `QIcon.cacheKey`). Views
+  are looked for after the `widget_visible` UI hook, or every
+  `VIEW_SCAN_FALLBACK_S` (10 s).
+- Disabled icons (`chrome_faded_disabled_icons.py`): Qt derives them by remapping grey around the window colour
   (light icons stay light on dark). A `QProxyStyle` fades them instead. It is
   inserted on top of whatever style is active (IDA's own proxy over
   windowsvista, or a user's style); never replace the style by name.
@@ -197,6 +260,6 @@ Things a style sheet cannot reach, handled in `chrome.py`:
 
 ## Generated, do not edit
 
-`dist/`, `src/*_gen.py`, `.cache/`. `src/icons.txt` and
+`dist/`, `src/*_gen.py`, `.cache/`. `src/ida/icon_meta.yaml` and
 `src/icons/modifier-*.svg` are committed but produced by `dump-icons` and
 `extract-modifiers`; regenerate rather than hand-edit.
