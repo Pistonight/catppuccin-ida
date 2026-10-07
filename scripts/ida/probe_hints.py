@@ -12,14 +12,14 @@ in the disassembly.
 Writes .cache/hints_probe.txt (also when stopped early by IDA closing).
 """
 
-import os
+from pathlib import Path
 
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication, QFrame, QLabel
 from shiboken6 import getCppPointer
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-OUT = os.path.join(ROOT, ".cache", "hints_probe.txt")
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / ".cache" / "hints_probe.txt"
 DURATION_MS = 20000
 POLL_MS = 100
 PROPERTIES = ("hints", "os-dark-theme", "debugging")
@@ -74,8 +74,8 @@ timer = QTimer()
 
 
 def write():
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    with open(OUT, "w", encoding="utf-8") as f:
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    with OUT.open("w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
 
 

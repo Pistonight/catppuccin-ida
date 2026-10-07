@@ -11,14 +11,14 @@ header (one with a base class), its members, an enum and a typedef.
 Writes .cache/type_listing_probe.txt.
 """
 
-import os
+from pathlib import Path
 
 import ida_kernwin
 import ida_lines
 from PySide6.QtCore import QTimer
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-OUT = os.path.join(ROOT, ".cache", "type_listing_probe.txt")
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / ".cache" / "type_listing_probe.txt"
 DURATION_MS = 30000
 POLL_MS = 200
 
@@ -72,8 +72,8 @@ def poll():
         lines.append("error: %r" % e)
     if elapsed >= DURATION_MS:
         timer.stop()
-        os.makedirs(os.path.dirname(OUT), exist_ok=True)
-        with open(OUT, "w", encoding="utf-8") as f:
+        OUT.parent.mkdir(parents=True, exist_ok=True)
+        with OUT.open("w", encoding="utf-8") as f:
             f.write("\n".join(lines) + "\n")
         print("type listing probe written to", OUT)
 

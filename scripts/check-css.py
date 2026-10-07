@@ -15,8 +15,8 @@ import re
 
 from common.config import colors, definitions, load_config, roles
 from common.errors import ScriptError, run
-from common.paths import CONFIG_FILE, rel
-from common.styles import style_list, style_path
+from common.paths import CONFIG_FILE, STYLES_LIST, rel
+from tools.css_bundler import css_file_list
 
 REF_RE = re.compile(r"\$\{([^}]*)\}")
 DEF_RE = re.compile(r"^\s*@def\s+(\S+)", re.M)
@@ -31,9 +31,8 @@ def main():
                   roles(config, color_values, definitions(config, color_values))}
 
     sources = {}
-    for path in style_list():
-        with open(style_path(path), encoding="utf-8") as f:
-            sources[path] = f.read()
+    for path in css_file_list(STYLES_LIST):
+        sources[path] = path.read_text(encoding="utf-8")
     local_defs = {name for text in sources.values() for name in DEF_RE.findall(text)}
 
     errors = []
@@ -42,11 +41,11 @@ def main():
         for m in COMMENT_RE.finditer(text):
             if "${" in m.group(0):
                 line = text.count("\n", 0, m.start()) + 1
-                errors.append("src/%s:%d: comment contains a dollar-brace sequence" % (path, line))
+                errors.append("%s:%d: comment contains a dollar-brace sequence" % (rel(path), line))
         code = COMMENT_RE.sub(lambda m: "\n" * m.group(0).count("\n"), text)
         for lineno, line in enumerate(code.split("\n"), 1):
             for m in REF_RE.finditer(line):
-                name, where = m.group(1), "src/%s:%d" % (path, lineno)
+                name, where = m.group(1), "%s:%d" % (rel(path), lineno)
                 if name in role_names:
                     uses.setdefault(name, []).append(where)
                 elif name in local_defs:
@@ -73,4 +72,4 @@ def main():
 
 
 if __name__ == "__main__":
-    run(main, "check-css")
+    run(main)

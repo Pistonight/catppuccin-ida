@@ -132,6 +132,7 @@ OpenImports.svg
 OpenLocalTypes.svg
 OpenNames.svg
 OpenNotepad.svg
+OpenPathfinder.svg
 OpenProblems.svg
 OpenSegmentRegisters.svg
 OpenSegments.svg
@@ -153,6 +154,7 @@ ProduceAsm.svg
 ProduceHeader.svg
 ProduceInc.svg
 ProduceLst.svg
+Pseudocode.svg
 QuitIDA.svg
 ReadWriteTraceAdd.svg
 RecentScripts.svg
@@ -202,7 +204,6 @@ ToggleSourceDebug.svg
 ToggleTraceFunctions.svg
 ToggleTraceInstructions.svg
 TracingWindow.svg
-TwoFlags.svg
 UnHide.svg
 UnHideAll.svg
 UndoReturn.svg

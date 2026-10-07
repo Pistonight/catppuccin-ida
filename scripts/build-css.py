@@ -1,7 +1,7 @@
 """
 Build the theme: generate the colour definitions and bundle the CSS.
 
-    uv run scripts/build-css.py    -> dist/themes/catppuccin/theme.css
+    uv run scripts/build-css.py    -> dist/catppuccin-ida/themes/catppuccin/theme.css
                                       src/color_gen.py
 
 1. Definitions are generated from the config file (common.paths.CONFIG_FILE):
@@ -14,17 +14,10 @@ Build the theme: generate the colour definitions and bundle the CSS.
    src/color_gen.py as resolved colours, e.g. TITLEBAR__CAPTION = "#181825".
 """
 
-import os
-
 from common.config import HEX_RE, PYTHON, colors, definitions, load_config, resolve, roles
 from common.errors import ScriptError, run
-from common.ida_icons import ICON_LIST, ida_icon_names
-from common.paths import CONFIG_FILE, DIST_THEME, SRC, rel
-from common.styles import style_list, style_path
-
-OUT = os.path.join(DIST_THEME, "theme.css")
-PY_OUT = os.path.join(SRC, "color_gen.py")
-RULE = "-" * 66
+from common.paths import COLOR_GEN, CONFIG_FILE, ICON_LIST, STYLES_LIST, THEME_CSS, ida_icon_names, rel
+from tools.css_bundler import bundle_css_files, css_banner
 
 # IDA expands variable references even inside comments, so nothing written into
 # a comment here may contain a dollar-brace sequence.
@@ -42,10 +35,6 @@ HEADER = """/*
  * one colour tag for keywords and numbers, one for members and operators,
  * and so on; the plugin re-tags its output so each kind gets its own.
  */"""
-
-
-def _banner(title):
-    return "/* %s *\n * %s\n * %s */" % (RULE, title, RULE)
 
 
 def _defs(names_values, prefix):
@@ -79,11 +68,11 @@ def generate_definitions(config, color_values, definition_values):
     parts = [
         HEADER % rel(CONFIG_FILE),
         '@importtheme "_base";',
-        _banner("Colours (palette and tints)") + "\n\n"
+        css_banner("Colours (palette and tints)") + "\n\n"
         + _defs(list(color_values.items()), "ctp-c-"),
-        _banner("Definitions") + "\n\n"
+        css_banner("Definitions") + "\n\n"
         + _defs([(n, _ref(v)) for n, v in definition_values.items()], "ctp-d-"),
-        _banner("Roles") + "\n\n"
+        css_banner("Roles") + "\n\n"
         + _defs([(n, _ref(v)) for n, v in role_values], "ctp-r-"),
     ]
     return "\n\n".join(parts)
@@ -94,7 +83,7 @@ def generate_menu_icons():
     lines = ['    qproperty-themeicon-%s: url("$RELPATH/icons/menu/%s.svg");' % (n, n)
              for n in ida_icon_names()]
     return "%s\n\nIDAMainWindow\n{\n%s\n}" % (
-        _banner("Toolbar/menu icons (generated from %s)" % rel(ICON_LIST)), "\n".join(lines))
+        css_banner("Toolbar/menu icons (generated from %s)" % rel(ICON_LIST)), "\n".join(lines))
 
 
 def main():
@@ -102,26 +91,21 @@ def main():
     color_values = colors(config)
     definition_values = definitions(config, color_values)
 
-    parts = [generate_definitions(config, color_values, definition_values)]
-    paths = style_list()
-    for path in paths:
-        with open(style_path(path), encoding="utf-8") as f:
-            css = f.read().strip("\n")
-        parts.append("%s\n\n%s" % (_banner("src/" + path), css))
-    parts.append(generate_menu_icons())
+    styles = bundle_css_files(STYLES_LIST)
+    parts = [generate_definitions(config, color_values, definition_values),
+             styles.source,
+             generate_menu_icons()]
     output = "\n\n".join(parts) + "\n"
 
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    with open(OUT, "w", encoding="utf-8", newline="\n") as f:
-        f.write(output)
-    print("built %s from %s, %s, %s" % (rel(OUT), rel(CONFIG_FILE),
-                                        ", ".join("src/" + p for p in paths), rel(ICON_LIST)))
+    THEME_CSS.parent.mkdir(parents=True, exist_ok=True)
+    THEME_CSS.write_text(output, encoding="utf-8", newline="\n")
+    print("built %s from %s, %s, %s" % (rel(THEME_CSS), rel(CONFIG_FILE),
+                                        ", ".join(rel(p) for p in styles.files), rel(ICON_LIST)))
 
     python = generate_python(config, color_values, definition_values)
-    with open(PY_OUT, "w", encoding="utf-8", newline="\n") as f:
-        f.write(python)
-    print("built %s from %s" % (rel(PY_OUT), rel(CONFIG_FILE)))
+    COLOR_GEN.write_text(python, encoding="utf-8", newline="\n")
+    print("built %s from %s" % (rel(COLOR_GEN), rel(CONFIG_FILE)))
 
 
 if __name__ == "__main__":
-    run(main, "build-css")
+    run(main)

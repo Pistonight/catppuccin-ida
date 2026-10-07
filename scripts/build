@@ -1,0 +1,11 @@
+#!/bin/sh
+# ./x build: the full build. Runs check-css, build-css, build-icons, then
+# build-py; stops at the first failure.
+root=$(cd "$(dirname "$0")/.." && pwd)
+
+if [ $# -gt 0 ]; then
+    echo "build takes no arguments (got: $*)"
+    exit 1
+fi
+
+exec sh "$root/x" check-css build-css build-icons build-py

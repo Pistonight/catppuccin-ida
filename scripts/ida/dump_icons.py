@@ -11,16 +11,17 @@ number, and a theme cannot replace them.
 
 import os
 import traceback
+from pathlib import Path
 
 import ida_pro
 from PySide6.QtCore import QDirIterator, QFile, QIODevice
 
 PREFIX = ":/IDAG/resources/menu/"
 
-out_dir = os.environ["CATPPUCCIN_DUMP_ICONS_OUT"]
+out_dir = Path(os.environ["CATPPUCCIN_DUMP_ICONS_OUT"])
 try:
-    svg_dir = os.path.join(out_dir, "svg")
-    os.makedirs(svg_dir, exist_ok=True)
+    svg_dir = out_dir / "svg"
+    svg_dir.mkdir(parents=True, exist_ok=True)
     names = []
     it = QDirIterator(PREFIX, QDirIterator.IteratorFlag.Subdirectories)
     while it.hasNext():
@@ -33,12 +34,10 @@ try:
         names.append(name)
         f = QFile(path)
         f.open(QIODevice.OpenModeFlag.ReadOnly)
-        with open(os.path.join(svg_dir, name), "wb") as out:
-            out.write(f.readAll().data())
-    with open(os.path.join(out_dir, "icons.txt"), "w", encoding="utf-8", newline="\n") as f:
-        f.write("".join(n + "\n" for n in sorted(names)))
+        (svg_dir / name).write_bytes(f.readAll().data())
+    with (out_dir / "icons.txt").open("w", encoding="utf-8", newline="\n") as out:
+        out.write("".join(n + "\n" for n in sorted(names)))
 except Exception:
-    with open(os.path.join(out_dir, "error.txt"), "w", encoding="utf-8") as f:
-        f.write(traceback.format_exc())
+    (out_dir / "error.txt").write_text(traceback.format_exc(), encoding="utf-8")
 finally:
     ida_pro.qexit(0)

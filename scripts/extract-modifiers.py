@@ -13,14 +13,11 @@ Run this only when changing the set of modifiers (MODIFIERS below); the
 results are committed sources.
 """
 
-import os
 import re
 
-from common.codicons import BADGE_CX, BADGE_CY, BADGE_R, codicon_path, svg_body
+from common.codicons import BADGE_CX, BADGE_CY, BADGE_R, svg_body
 from common.errors import ScriptError, run
-from common.paths import SRC, rel
-
-OUT_DIR = os.path.join(SRC, "icons")
+from common.paths import MODIFIERS_DIR, codicon_file, modifier_file, rel
 
 # modifier name -> codicon whose badge it is taken from
 MODIFIERS = {
@@ -103,7 +100,7 @@ def in_badge(bbox):
 
 def extract(donor):
     """The badge of a codicon as <path> elements (attributes like fill-rule kept)."""
-    body = svg_body(codicon_path(donor))
+    body = svg_body(codicon_file(donor))
     paths = []
     for m in PATH_RE.finditer(body):
         attrs = (m.group(1) + m.group(3)).strip()
@@ -116,15 +113,14 @@ def extract(donor):
 
 
 def main():
-    os.makedirs(OUT_DIR, exist_ok=True)
+    MODIFIERS_DIR.mkdir(parents=True, exist_ok=True)
     for name, donor in MODIFIERS.items():
         svg = ('<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" '
                'fill="currentColor">%s</svg>\n' % "".join(extract(donor)))
-        path = os.path.join(OUT_DIR, "modifier-%s.svg" % name)
-        with open(path, "w", encoding="utf-8", newline="\n") as f:
-            f.write(svg)
+        path = modifier_file(name)
+        path.write_text(svg, encoding="utf-8", newline="\n")
         print("wrote %s (from %s)" % (rel(path), donor))
 
 
 if __name__ == "__main__":
-    run(main, "extract-modifiers")
+    run(main)

@@ -16,15 +16,15 @@ function call and a type name, and screenshot the hints. Every hint is also
 logged, with its colour tags, to .cache/hexrays_hints_probe.txt.
 """
 
-import os
 import traceback
+from pathlib import Path
 
 import ida_hexrays
 import ida_lines
 import ida_typeinf
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-OUT = os.path.join(ROOT, ".cache", "hexrays_hints_probe.txt")
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / ".cache" / "hexrays_hints_probe.txt"
 BASE_FLAGS = (ida_typeinf.PRTYPE_MULTI | ida_typeinf.PRTYPE_TYPE | ida_typeinf.PRTYPE_SEMI
               | ida_typeinf.PRTYPE_COLORED)
 VARIANTS = (("A", BASE_FLAGS), ("B", BASE_FLAGS | ida_typeinf.PRTYPE_ARGLOCS))
@@ -73,12 +73,12 @@ class _ProbeHooks(ida_hexrays.Hexrays_Hooks):
                     for i, line in enumerate(text.splitlines()):
                         lines.append((label + ": " if i == 0 else "   ") + line)
             lines.append("-" * 40)
-            with open(OUT, "a", encoding="utf-8") as f:
+            with OUT.open("a", encoding="utf-8") as f:
                 f.write("\n".join(repr(line) for line in lines) + "\n\n")
                 f.write("\n".join(ida_lines.tag_remove(line) for line in lines) + "\n\n")
             return 0, "\n".join(lines) + "\n", len(lines)
         except Exception:
-            with open(OUT, "a", encoding="utf-8") as f:
+            with OUT.open("a", encoding="utf-8") as f:
                 f.write(traceback.format_exc() + "\n")
             return 0
 
@@ -89,8 +89,8 @@ if _hooks is not None:
     globals()["_catppuccin_hint_probe"] = None
     print("hexrays hints probe: off")
 else:
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    open(OUT, "w", encoding="utf-8").close()
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT.write_text("", encoding="utf-8")
     _hooks = _ProbeHooks()
     _hooks.hook()
     globals()["_catppuccin_hint_probe"] = _hooks

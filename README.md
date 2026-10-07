@@ -9,11 +9,12 @@ My Custom Catppuccin Theme for IDA, matching
   and numbers, which I need them to be different colors.
 - Applies other things through Windows/QT so the UI looks more correct.
 
-Quality: Slop. I made the repo structure and AI did the research and implementation :)
+Quality: Slop + Script. I made the repo structure and AI did the research and implementation :).
+Scripts have been converted to non slop;
 
 ## Requirements
 
-IDA 9.x
+IDA 9.x with IDAPython
 
 ## Installation
 
@@ -32,32 +33,30 @@ Requires:
 - [UV](https://docs.astral.sh/uv/)
   - To work without UV, Create a python virtual environment at `.venv`,
     then install the necessary dependencies as specified in `pyproject.toml`.
-- [Task](https://taskfile.dev/) - Optional
 - [PNPM](https://pnpm.io/) for getting `@vscode/codicons` for icons.
+
+The `x.ps1` (`x` for unix) is the development workflow runner.
+Run scripts like `./x <script> <args> ... <script> ...`.
 
 Setup:
 ```shell
-# With task
-task setup
-
-# Or run these:
-pnpm i
-uv sync
-./x link-ida
+./x setup
+./x setup-ida   # Link IDA Installation so python imports in IDE resolves
 ```
 
-The `link-ida` script finds the IDA installation in the default location `C:\Program Files\IDA Professional ...`.
-You can pass it an installation direction if your installation is somewhere else.
+The scripts find IDA by themselves: the install directory IDA records in
+`%APPDATA%\Hex-Rays\IDA Pro\ida-config.json`, or else the newest
+`C:\Program Files\IDA Professional ...`. If neither is there, they ask for it
+once and remember the answer in `.cache/IDA_LOCATION.txt`.
 
 Build:
 ```shell
-# With task
-task build
+./x build        # Everything below, plus the checks (check-css)
 
-# Or run these:  # You could only (re)-build the parts you changed
+# Or one step at a time:
 ./x build-css    # The theme.css
 ./x build-icons  # The SVG icons
-./x build        # The python plugin
+./x build-py     # The python plugin
 ```
 
 Install - This copies the files to `%APPDATA%\Hex-Rays\IDA Pro`. Pass

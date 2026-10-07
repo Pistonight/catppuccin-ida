@@ -4,42 +4,34 @@ Install the built theme and plugin into an IDA user directory.
     uv run scripts/install.py              # %APPDATA%\\Hex-Rays\\IDA Pro (or ~/.idapro)
     uv run scripts/install.py <dir>        # another IDA user directory
 
-Copies dist/plugins/catppuccin.py and dist/themes/catppuccin/ (replacing
-any previous install). Build first with scripts/build.py and
-scripts/build-css.py.
+Copies dist/catppuccin-ida/plugins/catppuccin.py and themes/catppuccin/ (replacing
+any previous install). Build first with ./x build.
 """
 
-import os
 import shutil
 import sys
 
 from common.errors import ScriptError, run
-from common.install import ITEMS, LEGACY, dist_item, target_dir
+from common.paths import DIST_IDA, INSTALL_ITEMS, ida_user_dir
 
 
 def main():
-    missing = [dist_item(i) for i in ITEMS if not os.path.exists(dist_item(i))]
+    missing = [str(DIST_IDA / i) for i in INSTALL_ITEMS if not (DIST_IDA / i).exists()]
     if missing:
-        raise ScriptError("not built yet: %s (run ./x build and ./x build-css)" % ", ".join(missing))
-    target = target_dir(sys.argv, "install")
+        raise ScriptError("not built yet: %s (run ./x build)" % ", ".join(missing))
+    target = ida_user_dir(sys.argv, "install")
 
-    for item in ITEMS:
-        src, dst = dist_item(item), os.path.join(target, item)
-        os.makedirs(os.path.dirname(dst), exist_ok=True)
-        if os.path.isdir(src):
-            if os.path.exists(dst):
+    for item in INSTALL_ITEMS:
+        src, dst = DIST_IDA / item, target / item
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        if src.is_dir():
+            if dst.exists():
                 shutil.rmtree(dst)
             shutil.copytree(src, dst)
         else:
             shutil.copy2(src, dst)
         print("installed %s" % dst)
 
-    for item in LEGACY:
-        path = os.path.join(target, item)
-        if os.path.exists(path):
-            print("warning: %s is from an older version and will also load; "
-                  "remove it (./x uninstall removes it too)" % path)
-
 
 if __name__ == "__main__":
-    run(main, "install")
+    run(main)

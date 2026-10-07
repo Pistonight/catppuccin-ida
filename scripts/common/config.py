@@ -11,7 +11,6 @@ Within the file, values refer to other entries without the ctp- prefix
 definitions, never to other roles.
 """
 
-import os
 import re
 
 import yaml
@@ -46,9 +45,9 @@ def _check_name(name, where):
 
 def load_config():
     """The parsed config file."""
-    if not os.path.isfile(CONFIG_FILE):
+    if not CONFIG_FILE.is_file():
         raise ScriptError("missing %s" % rel(CONFIG_FILE))
-    with open(CONFIG_FILE, encoding="utf-8") as f:
+    with CONFIG_FILE.open(encoding="utf-8") as f:
         data = yaml.safe_load(f)
     if not isinstance(data, dict):
         _fail("expected a mapping at the top level")

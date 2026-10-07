@@ -1,0 +1,20 @@
+#!/bin/sh
+# ./x clean: delete dist/, .cache/, .venv/, every __pycache__/ under src/
+# and scripts/, and node_modules/ (via pnpm clean).
+root=$(cd "$(dirname "$0")/.." && pwd)
+
+if [ $# -gt 0 ]; then
+    echo "clean takes no arguments (got: $*)"
+    exit 1
+fi
+
+cd "$root" || exit
+{
+    printf '%s\n' dist .cache .venv
+    find src scripts -type d -name __pycache__ -prune
+} | while IFS= read -r dir; do
+    [ -e "$dir" ] || continue
+    echo "Removing $dir"
+    rm -rf "./$dir" || exit
+done || exit
+exec pnpm --dir "$root" clean

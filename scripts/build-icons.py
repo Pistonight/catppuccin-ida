@@ -1,7 +1,7 @@
 """
 Build the theme's icons into dist.
 
-    uv run scripts/build-icons.py    -> dist/themes/catppuccin/icons/
+    uv run scripts/build-icons.py    -> dist/catppuccin-ida/themes/catppuccin/icons/
                                         .cache/ida_codicon.html
 
 Colours come from the config file (common.paths.CONFIG_FILE).
@@ -26,33 +26,26 @@ Colours come from the config file (common.paths.CONFIG_FILE).
   config's `windows` section) and the plugin icons' paths.
 """
 
-import os
 import re
 import shutil
+from pathlib import Path
 
 import yaml
 
-from common.codicons import BADGE_CX, BADGE_CY, BADGE_GAP_R, codicon_path, icon_body, svg_body
+from common.codicons import BADGE_CX, BADGE_CY, BADGE_GAP_R, icon_body, svg_body
 from common.config import HEX_RE, ICONS, colors, definitions, load_config, resolve, roles
 from common.errors import ScriptError, run
-from common.ida_icons import ICON_LIST, ida_icon_names
-from common.paths import CACHE, CONFIG_FILE, DIST_THEME, ICON_CONFIG_FILE, SRC, file_url, rel
+from common.paths import (CODICON_PREVIEW, CONFIG_FILE, ICON_CONFIG_FILE, ICON_LIST, ICONS_DIR, ICONS_GEN,
+                          MENU_ICONS_DIR, PLUGIN_ICONS_DIR, SWAPPED_ICONS_DIR, codicon_file, file_url,
+                          ida_icon_names, modifier_file, rel)
 from common.render import write_page
 
-ICONS_DIR = os.path.join(DIST_THEME, "icons")
-MENU_DIR = os.path.join(ICONS_DIR, "menu")
-# Icons the plugin swaps at runtime, at icons/swapped/<resource path>.svg
-SWAPPED_DIR = os.path.join(ICONS_DIR, "swapped")
 SWAPPED_SECTION = "swapped"
 SWAPPED_KEY_RE = re.compile(r"[\w-]+(/[\w-]+)*")
-PLUGIN_DIR = os.path.join(ICONS_DIR, "plugin")
 PLUGIN_SECTION = "plugin"
 PLUGIN_PREFIX = "plugin/"    # windows: values naming a plugin icon
 WINDOWS_SECTION = "windows"
 WILDCARD = "*"
-PY_OUT = os.path.join(SRC, "icons_gen.py")
-MODIFIERS_DIR = os.path.join(SRC, "icons")
-PREVIEW = os.path.join(CACHE, "ida_codicon.html")
 
 # 10x10 triangles, by direction
 ARROWS = {
@@ -114,26 +107,25 @@ def build_arrow_icons(icon_roles):
     states = {name[len(prefix):]: value for name, value in icon_roles.items() if name.startswith(prefix)}
     if ARROW_NORMAL_STATE not in states:
         raise ScriptError("%s: missing roles.arrows.%s" % (rel(CONFIG_FILE), ARROW_NORMAL_STATE))
-    os.makedirs(ICONS_DIR, exist_ok=True)
+    ICONS_DIR.mkdir(parents=True, exist_ok=True)
     written = 0
     for state, color in states.items():
         suffix = "" if state == ARROW_NORMAL_STATE else "-" + state
         for direction, points in ARROWS.items():
-            path = os.path.join(ICONS_DIR, "arrow-%s%s.svg" % (direction, suffix))
-            with open(path, "w", encoding="utf-8", newline="\n") as f:
-                f.write(ARROW_SVG % (points, color))
+            path = ICONS_DIR / ("arrow-%s%s.svg" % (direction, suffix))
+            path.write_text(ARROW_SVG % (points, color), encoding="utf-8", newline="\n")
             written += 1
     print("built %d arrow icons (%s) in %s" % (written, ", ".join(states), rel(ICONS_DIR)))
 
 
 def build_indicator_icons(icon_roles):
-    os.makedirs(ICONS_DIR, exist_ok=True)
+    ICONS_DIR.mkdir(parents=True, exist_ok=True)
     for name, (role, shape) in INDICATORS.items():
         key = "indicators--" + role
         if key not in icon_roles:
             raise ScriptError("%s: missing roles.indicators.%s" % (rel(CONFIG_FILE), role))
-        with open(os.path.join(ICONS_DIR, name + ".svg"), "w", encoding="utf-8", newline="\n") as f:
-            f.write(INDICATOR_SVG % (shape % icon_roles[key]))
+        (ICONS_DIR / (name + ".svg")).write_text(INDICATOR_SVG % (shape % icon_roles[key]),
+                                                 encoding="utf-8", newline="\n")
     print("built %d indicator icons in %s" % (len(INDICATORS), rel(ICONS_DIR)))
 
 
@@ -151,7 +143,7 @@ def _compose(name, entry, modifiers, color_values, definition_values):
         raise ScriptError("%s: expected `base: [<codicon>, <colour>]`" % where)
     codicon, ref = base
     color = _resolved(ref, color_values, definition_values, name + ".base", ICON_CONFIG_FILE)
-    body = _colored(icon_body(codicon_path(codicon)), color)
+    body = _colored(icon_body(codicon_file(codicon)), color)
     modifier = entry.get("modifier")
     if modifier is None:
         layers = body
@@ -166,21 +158,20 @@ def _compose(name, entry, modifiers, color_values, definition_values):
 
 def _write_icons(entries, out_dir, modifiers, color_values, definition_values):
     """Build {relative name: entry} into out_dir/<name>.svg; returns preview items."""
-    if os.path.isdir(out_dir):
+    if out_dir.is_dir():
         shutil.rmtree(out_dir)
     preview = []
     for name, entry in entries.items():
         svg, label = _compose(name, entry, modifiers, color_values, definition_values)
-        path = os.path.join(out_dir, *name.split("/")) + ".svg"
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w", encoding="utf-8", newline="\n") as f:
-            f.write(svg)
+        path = out_dir / (name + ".svg")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(svg, encoding="utf-8", newline="\n")
         preview.append((label, path))
     return preview
 
 
 def build_ida_icons(color_values, definition_values):
-    with open(ICON_CONFIG_FILE, encoding="utf-8") as f:
+    with ICON_CONFIG_FILE.open(encoding="utf-8") as f:
         icon_config = yaml.safe_load(f)
     if not isinstance(icon_config, dict) or not isinstance(icon_config.get("modifiers"), dict):
         raise ScriptError("%s: expected a `modifiers` section and one entry per icon"
@@ -188,8 +179,8 @@ def build_ida_icons(color_values, definition_values):
 
     modifiers = {}
     for name, ref in icon_config.pop("modifiers").items():
-        path = os.path.join(MODIFIERS_DIR, "modifier-%s.svg" % name)
-        if not os.path.isfile(path):
+        path = modifier_file(name)
+        if not path.is_file():
             raise ScriptError("%s: modifiers.%s: %s does not exist (see scripts/extract-modifiers.py)"
                               % (rel(ICON_CONFIG_FILE), name, rel(path)))
         color = _resolved(ref, color_values, definition_values, "modifiers." + name, ICON_CONFIG_FILE)
@@ -210,28 +201,27 @@ def build_ida_icons(color_values, definition_values):
         raise ScriptError("%s: not in %s: %s"
                           % (rel(ICON_CONFIG_FILE), rel(ICON_LIST), ", ".join(unknown)))
 
-    preview = _write_icons(icon_config, MENU_DIR, modifiers, color_values, definition_values)
+    preview = _write_icons(icon_config, MENU_ICONS_DIR, modifiers, color_values, definition_values)
     missing = [n for n in themable if n not in icon_config]
-    print("built %d IDA icons in %s" % (len(preview), rel(MENU_DIR)))
+    print("built %d IDA icons in %s" % (len(preview), rel(MENU_ICONS_DIR)))
     if missing:
         print("warning: no icon configured for %d: %s" % (len(missing), ", ".join(missing)))
 
-    swapped_preview = _write_icons(swapped, SWAPPED_DIR, modifiers, color_values, definition_values)
-    print("built %d swapped icons in %s" % (len(swapped_preview), rel(SWAPPED_DIR)))
+    swapped_preview = _write_icons(swapped, SWAPPED_ICONS_DIR, modifiers, color_values, definition_values)
+    print("built %d swapped icons in %s" % (len(swapped_preview), rel(SWAPPED_ICONS_DIR)))
 
     bad = [k for k in plugin_icons if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", str(k))]
     if bad:
         raise ScriptError("%s: %s keys must be lower-case-dashed names: %s"
                           % (rel(ICON_CONFIG_FILE), PLUGIN_SECTION, ", ".join(map(str, bad))))
-    plugin_preview = _write_icons(plugin_icons, PLUGIN_DIR, modifiers, color_values, definition_values)
-    print("built %d plugin icons in %s" % (len(plugin_preview), rel(PLUGIN_DIR)))
+    plugin_preview = _write_icons(plugin_icons, PLUGIN_ICONS_DIR, modifiers, color_values, definition_values)
+    print("built %d plugin icons in %s" % (len(plugin_preview), rel(PLUGIN_ICONS_DIR)))
 
-    write_page(preview + swapped_preview + plugin_preview, "IDA icons from codicons", PREVIEW)
-    print("rendered them to %s" % file_url(PREVIEW))
+    write_page(preview + swapped_preview + plugin_preview, "IDA icons from codicons", CODICON_PREVIEW)
+    print("rendered them to %s" % file_url(CODICON_PREVIEW))
 
-    with open(PY_OUT, "w", encoding="utf-8", newline="\n") as f:
-        f.write(generate_python(windows, plugin_icons, icon_config))
-    print("wrote %s" % rel(PY_OUT))
+    ICONS_GEN.write_text(generate_python(windows, plugin_icons, icon_config), encoding="utf-8", newline="\n")
+    print("wrote %s" % rel(ICONS_GEN))
 
 
 def _section(icon_config, name, what):
@@ -241,9 +231,9 @@ def _section(icon_config, name, what):
     return section
 
 
-def _icon_path(*parts):
+def _icon_path(folder, name):
     """A built icon's path under the theme's icons/ folder, as the plugin uses it."""
-    return os.path.relpath(os.path.join(*parts), ICONS_DIR).replace(os.sep, "/") + ".svg"
+    return Path(folder, name).relative_to(ICONS_DIR).as_posix() + ".svg"
 
 
 def generate_python(windows, plugin_icons, icon_config):
@@ -259,9 +249,9 @@ def generate_python(windows, plugin_icons, icon_config):
         title = str(title)
         name = str(name)
         if name.startswith(PLUGIN_PREFIX) and name[len(PLUGIN_PREFIX):] in plugin_icons:
-            path = _icon_path(PLUGIN_DIR, name[len(PLUGIN_PREFIX):])
+            path = _icon_path(PLUGIN_ICONS_DIR, name[len(PLUGIN_PREFIX):])
         elif name in icon_config:
-            path = _icon_path(MENU_DIR, name)
+            path = _icon_path(MENU_ICONS_DIR, name)
         else:
             raise ScriptError("%s: %r is neither an IDA icon defined above nor %s<name> from `%s`"
                               % (where, name, PLUGIN_PREFIX, PLUGIN_SECTION))
@@ -272,7 +262,7 @@ def generate_python(windows, plugin_icons, icon_config):
         lines.append("    (%r, %r, %r)," % (title, is_prefix, path))
     lines.append("]")
     for name in plugin_icons:
-        lines.append("%s_ICON = %r" % (str(name).replace("-", "_").upper(), _icon_path(PLUGIN_DIR, name)))
+        lines.append("%s_ICON = %r" % (str(name).replace("-", "_").upper(), _icon_path(PLUGIN_ICONS_DIR, name)))
     return "\n".join(lines) + "\n"
 
 
@@ -287,4 +277,4 @@ def main():
 
 
 if __name__ == "__main__":
-    run(main, "build-icons")
+    run(main)

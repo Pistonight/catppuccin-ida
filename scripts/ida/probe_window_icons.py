@@ -14,13 +14,13 @@ Writes .cache/window_icons_probe.txt.
 """
 
 import gc
-import os
 import traceback
+from pathlib import Path
 
 from PySide6.QtWidgets import QAbstractButton, QApplication, QTabBar
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-OUT = os.path.join(ROOT, ".cache", "window_icons_probe.txt")
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / ".cache" / "window_icons_probe.txt"
 
 lines = []
 
@@ -109,7 +109,7 @@ try:
 except Exception:
     log(traceback.format_exc())
 
-os.makedirs(os.path.dirname(OUT), exist_ok=True)
-with open(OUT, "w", encoding="utf-8") as f:
+OUT.parent.mkdir(parents=True, exist_ok=True)
+with OUT.open("w", encoding="utf-8") as f:
     f.write("\n".join(lines) + "\n")
 print("probe written to", OUT)

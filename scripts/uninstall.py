@@ -4,27 +4,26 @@ Remove the theme and plugin from an IDA user directory.
     uv run scripts/uninstall.py            # %APPDATA%\\Hex-Rays\\IDA Pro (or ~/.idapro)
     uv run scripts/uninstall.py <dir>      # another IDA user directory
 
-Removes plugins/catppuccin.py and themes/catppuccin/, plus plugin files left
-by older versions of this project. Nothing else is touched.
+Removes plugins/catppuccin.py and themes/catppuccin/. Nothing else is
+touched.
 """
 
-import os
 import shutil
 import sys
 
 from common.errors import run
-from common.install import ITEMS, LEGACY, target_dir
+from common.paths import INSTALL_ITEMS, ida_user_dir
 
 
 def main():
-    target = target_dir(sys.argv, "uninstall")
+    target = ida_user_dir(sys.argv, "uninstall")
     removed = 0
-    for item in ITEMS + LEGACY:
-        path = os.path.join(target, item)
-        if os.path.isdir(path):
+    for item in INSTALL_ITEMS:
+        path = target / item
+        if path.is_dir():
             shutil.rmtree(path)
-        elif os.path.exists(path):
-            os.remove(path)
+        elif path.exists():
+            path.unlink()
         else:
             continue
         removed += 1
@@ -34,4 +33,4 @@ def main():
 
 
 if __name__ == "__main__":
-    run(main, "uninstall")
+    run(main)

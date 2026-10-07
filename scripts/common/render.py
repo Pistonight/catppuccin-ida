@@ -2,7 +2,6 @@
 
 import base64
 import html
-import os
 
 from common.config import colors, load_config
 
@@ -37,12 +36,8 @@ TILE = """<div class="icon">
 
 def find_svgs(folder):
     """[(path relative to folder with forward slashes, absolute path)], sorted."""
-    found = []
-    for dirpath, _, files in os.walk(folder):
-        for name in files:
-            if name.lower().endswith(".svg"):
-                path = os.path.join(dirpath, name)
-                found.append((os.path.relpath(path, folder).replace(os.sep, "/"), path))
+    found = [(path.relative_to(folder).as_posix(), path) for path in folder.rglob("*")
+             if path.suffix.lower() == ".svg" and path.is_file()]
     return sorted(found, key=lambda item: item[0].lower())
 
 
@@ -53,11 +48,9 @@ def write_page(svgs, title, out):
     palette = colors(load_config())
     tiles = []
     for label, path in svgs:
-        with open(path, "rb") as f:
-            data = base64.b64encode(f.read()).decode("ascii")
+        data = base64.b64encode(path.read_bytes()).decode("ascii")
         tiles.append(TILE.format(uri="data:image/svg+xml;base64," + data, name=html.escape(label)))
     page = PAGE.format(title=html.escape(title), bg=palette["base"], fg=palette["text"],
                        count=len(svgs), tiles="\n".join(tiles))
-    os.makedirs(os.path.dirname(out), exist_ok=True)
-    with open(out, "w", encoding="utf-8", newline="\n") as f:
-        f.write(page)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(page, encoding="utf-8", newline="\n")

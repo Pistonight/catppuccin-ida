@@ -1,12 +1,9 @@
 """Reading codicons (@vscode/codicons, installed with pnpm)."""
 
-import os
 import re
 
 from common.errors import ScriptError
-from common.paths import ROOT, rel
-
-CODICONS_DIR = os.path.join(ROOT, "node_modules", "@vscode", "codicons", "src", "icons")
+from common.paths import rel
 
 # Codicon badges (e.g. the plus on new-file) sit in this circle, and the rest of
 # the icon keeps clear of BADGE_GAP_R around it.
@@ -20,19 +17,9 @@ VIEWBOX_RE = re.compile(r'viewBox="([^"]+)"')
 SIZE = 16
 
 
-def codicon_path(name):
-    path = os.path.join(CODICONS_DIR, name + ".svg")
-    if not os.path.isdir(CODICONS_DIR):
-        raise ScriptError("%s not found; run `pnpm install`" % rel(CODICONS_DIR))
-    if not os.path.isfile(path):
-        raise ScriptError("no codicon named %r (%s)" % (name, rel(path)))
-    return path
-
-
 def _parse(path):
     """(viewBox numbers, markup inside <svg>) of an icon file."""
-    with open(path, encoding="utf-8") as f:
-        text = f.read()
+    text = path.read_text(encoding="utf-8")
     m = SVG_RE.search(text)
     vb = VIEWBOX_RE.search(m.group(1)) if m else None
     if not m or not vb:

@@ -4,7 +4,7 @@ List IDA's built-in menu/toolbar icons (SVGs compiled into IDA).
     uv run scripts/dump-icons.py    -> src/icons.txt
                                        .cache/ida_icon_dump.html
 
-Starts the IDA recorded by scripts/link-ida.py in batch mode on a tiny
+Starts IDA (common.paths.ida_dir()) in batch mode on a tiny
 throwaway binary; scripts/ida/dump_icons.py dumps the icons inside IDA.
 src/icons.txt gets the icon file names; .cache/ida_icon_dump.html renders
 the original icons for reference. Numbered icons (e.g. 177.svg) are left out,
@@ -23,14 +23,10 @@ import shutil
 import subprocess
 
 from common.errors import ScriptError, run
-from common.ida import ida_dir, ida_exe
-from common.paths import CACHE, ROOT, SRC, file_url, rel
+from common.paths import (DUMP_ICONS_WORK_DIR, ICON_DUMP_PREVIEW, ICON_LIST, IDA_DUMP_SCRIPT, file_url,
+                          ida_dir, ida_exe, rel)
 from common.render import write_page
 
-IN_IDA_SCRIPT = os.path.join(ROOT, "scripts", "ida", "dump_icons.py")
-OUT = os.path.join(SRC, "icons.txt")
-HTML_OUT = os.path.join(CACHE, "ida_icon_dump.html")
-WORK_DIR = os.path.join(CACHE, "dump-icons")
 STUB_NAME = "stub.bin"
 OUT_ENV = "CATPPUCCIN_DUMP_ICONS_OUT"
 TIMEOUT_S = 300
@@ -41,58 +37,53 @@ STUB = b"\x90" * 15 + b"\xc3"
 
 
 def _clean_work_dir(keep=()):
-    """Delete everything in WORK_DIR except the names in `keep`."""
-    os.makedirs(WORK_DIR, exist_ok=True)
-    for name in os.listdir(WORK_DIR):
-        if name in keep:
+    """Delete everything in DUMP_ICONS_WORK_DIR except the names in `keep`."""
+    DUMP_ICONS_WORK_DIR.mkdir(parents=True, exist_ok=True)
+    for path in DUMP_ICONS_WORK_DIR.iterdir():
+        if path.name in keep:
             continue
-        path = os.path.join(WORK_DIR, name)
-        if os.path.isdir(path):
+        if path.is_dir():
             shutil.rmtree(path)
         else:
-            os.remove(path)
+            path.unlink()
 
 
 def main():
     exe = ida_exe(ida_dir())
 
     _clean_work_dir()
-    stub = os.path.join(WORK_DIR, STUB_NAME)
-    with open(stub, "wb") as f:
-        f.write(STUB)
+    stub = DUMP_ICONS_WORK_DIR / STUB_NAME
+    stub.write_bytes(STUB)
     try:
-        dump = os.path.join(WORK_DIR, "dump")
-        os.makedirs(dump)
-        env = dict(os.environ, **{OUT_ENV: dump})
+        dump = DUMP_ICONS_WORK_DIR / "dump"
+        dump.mkdir()
+        env = dict(os.environ, **{OUT_ENV: str(dump)})
         print("running %s ..." % exe)
         try:
-            subprocess.run([exe, "-A", "-S" + IN_IDA_SCRIPT, stub],
-                           cwd=WORK_DIR, env=env, timeout=TIMEOUT_S, check=False)
+            subprocess.run([exe, "-A", "-S%s" % IDA_DUMP_SCRIPT, stub],
+                           cwd=DUMP_ICONS_WORK_DIR, env=env, timeout=TIMEOUT_S, check=False)
         except subprocess.TimeoutExpired:
             raise ScriptError("IDA did not finish within %d s" % TIMEOUT_S)
 
-        error = os.path.join(dump, "error.txt")
-        if os.path.isfile(error):
-            with open(error, encoding="utf-8") as f:
-                raise ScriptError("inside IDA:\n" + f.read())
-        listing = os.path.join(dump, "icons.txt")
-        if not os.path.isfile(listing):
+        error = dump / "error.txt"
+        if error.is_file():
+            raise ScriptError("inside IDA:\n" + error.read_text(encoding="utf-8"))
+        listing = dump / "icons.txt"
+        if not listing.is_file():
             raise ScriptError("IDA exited without listing the icons")
-        with open(listing, encoding="utf-8") as f:
-            names = [n for n in f.read().split("\n") if n]
+        names = [n for n in listing.read_text(encoding="utf-8").split("\n") if n]
         if not names:
             raise ScriptError("IDA listed no icons")
 
-        with open(OUT, "w", encoding="utf-8", newline="\n") as f:
-            f.write("".join(n + "\n" for n in names))
-        print("listed %d icons in %s" % (len(names), rel(OUT)))
+        ICON_LIST.write_text("".join(n + "\n" for n in names), encoding="utf-8", newline="\n")
+        print("listed %d icons in %s" % (len(names), rel(ICON_LIST)))
 
-        write_page([(n, os.path.join(dump, "svg", n)) for n in names],
-                   "IDA's built-in icons", HTML_OUT)
-        print("rendered them to %s" % file_url(HTML_OUT))
+        write_page([(n, dump / "svg" / n) for n in names],
+                   "IDA's built-in icons", ICON_DUMP_PREVIEW)
+        print("rendered them to %s" % file_url(ICON_DUMP_PREVIEW))
     finally:
         _clean_work_dir(keep=(STUB_NAME,))
 
 
 if __name__ == "__main__":
-    run(main, "dump-icons")
+    run(main)

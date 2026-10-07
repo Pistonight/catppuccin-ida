@@ -1,0 +1,11 @@
+#!/bin/sh
+# ./x setup: install the dependencies (pnpm install, uv sync).
+root=$(cd "$(dirname "$0")/.." && pwd)
+
+if [ $# -gt 0 ]; then
+    echo "setup takes no arguments (got: $*)"
+    exit 1
+fi
+
+pnpm --dir "$root" install || exit
+exec uv sync --project "$root"

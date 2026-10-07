@@ -17,22 +17,30 @@ IDAPython plugin. See README.md for the user-facing setup.
 
 Run scripts through the wrappers, `./x <name> [args]` (sh) or
 `./x.ps1 <name> [args]` (PowerShell), which run `uv run scripts/<name>.py`.
-Any new `scripts/<name>.py` is picked up automatically. `task` targets in
+A shell script `scripts/<name>` (no extension, for `./x`) or
+`scripts/<name>.ps1` (for `./x.ps1`) takes priority over the `.py`. New
+scripts are picked up automatically. Several scripts can be
+chained, `./x clean build install`: they run in order and
+stop at the first failure; an argument that names a script starts the next
+step, any other goes to the script before it. `task` targets in
 Taskfile.yml chain them.
 
 | Command | Does |
 |---|---|
-| `./x link-ida [dir]` | finds IDA (highest `C:\Program Files\IDA Professional <ver>`, or `$IDADIR`, or `dir`), writes `.venv/.../ida.pth` (so editors see `ida_*`) and `.cache/IDA_LOCATION.txt` |
+| `./x setup-ida` | writes `.venv/.../ida.pth` (so editors see `ida_*`) for the IDA install from `ida_dir()` (`scripts/common/paths.py`): `Paths.ida-install-dir` in `%APPDATA%\Hex-Rays\IDA Pro\ida-config.json` if set; else `.cache/IDA_LOCATION.txt` if usable; else the highest `C:\Program Files\IDA Professional <ver>`; else it asks and records the answer in `.cache/IDA_LOCATION.txt`. Scripts that need IDA call it themselves |
 | `./x check-css` | validates `src/css/` against `config.yaml` (rules below) |
-| `./x build-css` | `dist/themes/catppuccin/theme.css` and `src/color_gen.py` |
-| `./x build-icons` | `dist/themes/catppuccin/icons/` (arrows, menu icons, ...), `src/icons_gen.py` and `.cache/ida_codicon.html` preview |
-| `./x build` | bundles `src/*.py` into `dist/plugins/catppuccin.py` (needs `build-css` and `build-icons` first, for the `*_gen.py`) |
-| `./x install [dir]` / `./x uninstall [dir]` | copy/remove `dist/` into IDA's user dir (default `%APPDATA%\Hex-Rays\IDA Pro`) |
+| `./x build-css` | `dist/catppuccin-ida/themes/catppuccin/theme.css` and `src/color_gen.py` |
+| `./x build-icons` | `dist/catppuccin-ida/themes/catppuccin/icons/` (arrows, menu icons, ...), `src/icons_gen.py` and `.cache/ida_codicon.html` preview |
+| `./x build-py` | bundles `src/*.py` into `dist/catppuccin-ida/plugins/catppuccin.py` (needs `build-css` and `build-icons` first, for the `*_gen.py`) |
+| `./x package` | zips the contents of `dist/catppuccin-ida/` into `dist/catppuccin-ida.zip` (unpacks into an IDA user dir) |
+| `./x install [dir]` / `./x uninstall [dir]` | copy/remove `dist/catppuccin-ida/` into IDA's user dir (default `%APPDATA%\Hex-Rays\IDA Pro`) |
 | `./x dump-icons` | runs IDA headless to list its built-in icons into `src/icons.txt`; preview in `.cache/ida_icon_dump.html` |
 | `./x extract-modifiers` | regenerates `src/icons/modifier-*.svg` from codicon badges |
+| `./x setup` | `scripts/setup` / `scripts/setup.ps1`: `pnpm install` and `uv sync` |
+| `./x clean` | `scripts/clean` / `scripts/clean.ps1`: deletes `dist/`, `.cache/`, `.venv/`, `__pycache__/` and `node_modules/` (`pnpm clean`) |
 | `./x render-icons <folder>` | HTML preview of every SVG under a folder (`dist/test_icons.html`) |
 
-Full build: `check-css`, `build-css`, `build-icons`, `build` (= `task build`).
+Full build: `./x build` (`scripts/build` / `build.ps1`) runs `check-css`, `build-css`, `build-icons`, `build-py`; it stops at the first failure.
 
 ## Layout
 
@@ -42,7 +50,8 @@ config-icons-ida.yaml    IDA icon name -> codicon base, colour, modifier
 src/
   main.py                plugin entry (PLUGIN_ENTRY); merges the parts below
   hexrays.py             re-tags Hex-Rays pseudocode (see "Pseudocode")
-  chrome.py              Windows title bars, nav band arrows, faded disabled icons, list row icons
+  chrome.py              Windows title bars, nav band arrows, faded disabled icons
+  old_chrome_icon_hack.py  IDA 9.3 list row / dock window icon swaps; not imported, kept for reference
   perf.py                timings printed to IDA's output (PERF_ENABLED)
   color_gen.py           GENERATED (gitignored) colours for the plugin
   icons_gen.py           GENERATED (gitignored) window icons by title, plugin icons
@@ -56,9 +65,13 @@ src/
   icons/modifier-*.svg   badge overlays for icons (from extract-modifiers)
 scripts/
   <name>.py              commands for ./x
-  common/                shared helpers (paths, config, styles, errors, ida, ...)
+  common/                shared helpers: paths.py (every repo, dist, cache and IDA path), config, codicons, render, errors
+  tools/                 building blocks the scripts call (not ./x commands):
+                         python_bundler.py: bundle_python_modules(entry_point)
+                         css_bundler.py: bundle_css_files(list_txt), paths relative to the txt
   ida/                   scripts that run *inside* IDA (not ./x commands)
-dist/                    build output; mirrors IDA's user dir (plugins/, themes/catppuccin/)
+dist/                    build output, one folder per target
+  catppuccin-ida/        the IDA build; mirrors IDA's user dir (plugins/, themes/catppuccin/)
 .cache/                  local state and previews (gitignored)
 node_modules/            @vscode/codicons (pnpm)
 ```
@@ -108,8 +121,9 @@ The generated definitions block goes first in `theme.css` (with
 - `themeicon` only reaches actions (menus, toolbar). Window icons, dock
   headers, Windows-menu entries and list rows come from IDA's icon table, and
   some icons load straight from other resources (`:/IDAG/resources/widgets/`,
-  e.g. Local Types rows). The plugin swaps list row icons at runtime
-  (`_IconSwap` in `src/chrome.py`, via a replacement item delegate),
+  e.g. Local Types rows). The 9.3 plugin swapped list row icons at runtime
+  (`_IconSwap`, now in `src/old_chrome_icon_hack.py` and not loaded, via a
+  replacement item delegate),
   recognising originals by their exact pixels: it maps
   `icons/menu/<Name>.svg` to `:/IDAG/resources/menu/<Name>.svg` and
   `icons/swapped/<path>.svg` to `:/<path>.svg`. The latter come from the
@@ -117,7 +131,8 @@ The generated definitions block goes first in `theme.css` (with
   Lookup tables are built per screen scale (not known yet when the plugin
   loads) from the 1 s refresh, in slices of at most `TABLE_SLICE_MS`: built
   in one go it took ~260 ms and froze IDA (a white flash) on the first list.
-- Dock window icons are matched by window title instead (`_WindowIcons`):
+- Dock window icons were matched by window title instead (`_WindowIcons`,
+  also in `src/old_chrome_icon_hack.py`):
   the `windows` section of `config-icons-ida.yaml` maps titles (trailing `*`
   = any suffix) to icon names, generated into `src/icons_gen.py`. They are
   set on `IDADockWidget` (window icon), `DockTabBar` tabs (tabbed docks) and
@@ -135,8 +150,8 @@ The generated definitions block goes first in `theme.css` (with
 
 ## Plugin
 
-`./x build` inlines `src/main.py` and the `src/` modules it imports into one
-file. Rules: import src modules as `from module import name` (never
+`./x build-py` inlines `src/main.py` and the `src/` modules it imports into one
+file (via `scripts/tools/python_bundler.py`). Rules: import src modules as `from module import name` (never
 `import module`); top-level names unique across modules; `*_gen` modules are
 generated and must exist (run `build-css`). The plugin is `PLUGIN_FIX` (loads
 at IDA startup) and does nothing unless the catppuccin theme is active
@@ -158,7 +173,7 @@ Things a style sheet cannot reach, handled in `chrome.py`:
 
 ## Testing without IDA
 
-- `uvx pyright` type-checks `src/` and `scripts/` (needs `./x link-ida` for `ida_*`).
+- `uvx pyright` type-checks `src/` and `scripts/` (needs `./x setup-ida` for `ida_*`).
 - The dev venv has PySide6 pinned to the version IDA bundles (6.8.0), so Qt
   behaviour (style sheets, QtSvg rendering incl. masks, styles) can be tried
   in `uv run python` with a `QApplication`. Use scoped enums
