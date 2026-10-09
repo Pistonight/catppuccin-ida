@@ -63,6 +63,7 @@ tints:
   grey-35: { color: c-overlay1, amount: 0.35 }
   # Translucent (alpha), for highlights and overlays drawn over other colours
   yellow-a25: { color: c-yellow, alpha: 0.25 }
+  yellow-a10: { color: c-yellow, alpha: 0.10 }
   mauve-a25: { color: c-mauve, alpha: 0.25 }
   green-a25: { color: c-green, alpha: 0.25 }
   green-a10: { color: c-green, alpha: 0.10 }
@@ -336,6 +337,15 @@ roles:
       comment: d-comment
       preprocessor: d-keyword
       number: d-constant
+      # user1-4: extra lexer slots; the C syntax tab of Edit type colours
+      # built-in types (bool, int) with user1 (_base: darkblue)
+      user1: d-type
+      user2: d-dim
+      user3: d-variable
+      user4: d-macro
+      # Find matches (_base: pale yellow)
+      match-line-bg: c-yellow-a10
+      match-text-bg: c-yellow-a25
       margin-fg: d-dim
       margin-header: d-fg
       counter-fg: d-fg

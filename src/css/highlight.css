@@ -44,6 +44,26 @@ text_area_t[os-dark-theme="true"]
     qproperty-number-fg: ${ctp-r-highlight--text-area--number};
     qproperty-number-weight: 0;
     qproperty-number-italic: 0;
+
+    /* Edit type > C syntax: built-in types (bool, int) use user1 */
+    qproperty-user1-fg: ${ctp-r-highlight--text-area--user1};
+    qproperty-user1-weight: 0;
+    qproperty-user1-italic: 0;
+
+    qproperty-user2-fg: ${ctp-r-highlight--text-area--user2};
+    qproperty-user2-weight: 0;
+    qproperty-user2-italic: 0;
+
+    qproperty-user3-fg: ${ctp-r-highlight--text-area--user3};
+    qproperty-user3-weight: 0;
+    qproperty-user3-italic: 0;
+
+    qproperty-user4-fg: ${ctp-r-highlight--text-area--user4};
+    qproperty-user4-weight: 0;
+    qproperty-user4-italic: 0;
+
+    qproperty-match-line-bg: ${ctp-r-highlight--text-area--match-line-bg};
+    qproperty-match-text-bg: ${ctp-r-highlight--text-area--match-text-bg};
 }
 
 text_area_t QWidget
